@@ -1,0 +1,580 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Users API",
+		"version": "1.0.0"
+	},
+	"servers": [
+		{
+			"url": "http://localhost:3000"
+		}
+	],
+	"paths": {
+		"/login": {
+			"put": {
+				"summary": "Login",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Auth"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TokenResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/refresh": {
+			"put": {
+				"summary": "Refresh",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"schema": {
+							"$ref": "#/components/schemas/Token"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"accessToken": {
+											"$ref": "#/components/schemas/Token"
+										}
+									},
+									"required": ["accessToken"],
+									"additionalProperties": false
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/register": {
+			"post": {
+				"summary": "Register",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Register"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TokenResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/forgot": {
+			"put": {
+				"summary": "Forgot",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"email": {
+										"$ref": "#/components/schemas/Email"
+									}
+								},
+								"required": ["email"],
+								"additionalProperties": false
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				}
+			}
+		},
+		"/reset/{resetToken}": {
+			"put": {
+				"summary": "Reset",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "resetToken",
+						"schema": {
+							"$ref": "#/components/schemas/Token"
+						},
+						"required": true
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"password": {
+										"$ref": "#/components/schemas/Password"
+									}
+								},
+								"required": ["password"],
+								"additionalProperties": false
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TokenResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/logout": {
+			"post": {
+				"summary": "Logout",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"schema": {
+							"$ref": "#/components/schemas/Token"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				}
+			}
+		},
+		"/password": {
+			"put": {
+				"summary": "Password",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"schema": {
+							"$ref": "#/components/schemas/Token"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TokenResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users": {
+			"post": {
+				"summary": "Create",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"schema": {
+							"$ref": "#/components/schemas/Token"
+						},
+						"required": true
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Create"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"summary": "List",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"schema": {
+							"$ref": "#/components/schemas/Token"
+						},
+						"required": true
+					},
+					{
+						"in": "query",
+						"name": "skip",
+						"schema": {
+							"type": "integer"
+						},
+						"required": false
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"schema": {
+							"type": "integer"
+						},
+						"required": false
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/User"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users/{userId}": {
+			"get": {
+				"summary": "Retrieve",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"schema": {
+							"$ref": "#/components/schemas/Token"
+						},
+						"required": true
+					},
+					{
+						"in": "path",
+						"name": "userId",
+						"schema": {
+							"$ref": "#/components/schemas/UserId"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/User" }
+							}
+						}
+					}
+				}
+			},
+			"put": {
+				"summary": "Update",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"schema": {
+							"$ref": "#/components/schemas/Token"
+						},
+						"required": true
+					},
+					{
+						"in": "path",
+						"name": "userId",
+						"schema": {
+							"$ref": "#/components/schemas/UserId"
+						},
+						"required": true
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Update"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"summary": "Delete",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"schema": {
+							"$ref": "#/components/schemas/Token"
+						},
+						"required": true
+					},
+					{
+						"in": "path",
+						"name": "userId",
+						"schema": {
+							"$ref": "#/components/schemas/UserId"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				}
+			},
+			"patch": {
+				"summary": "Patch",
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"schema": {
+							"$ref": "#/components/schemas/Token"
+						},
+						"required": true
+					},
+					{
+						"in": "path",
+						"name": "userId",
+						"schema": {
+							"$ref": "#/components/schemas/UserId"
+						},
+						"required": true
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"role": {
+										"$ref": "#/components/schemas/Role"
+									}
+								},
+								"required": ["role"],
+								"additionalProperties": false
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/User" }
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"UserId": {
+				"type": "string",
+				"example": "5e91e2c77a7117279f42d003"
+			},
+			"Email": {
+				"type": "string",
+				"format": "email",
+				"example": "johnsmith@exmaple.com"
+			},
+			"Password": {
+				"type": "string",
+				"format": "password",
+				"minLength": 8,
+				"example": "1234"
+			},
+			"Role": {
+				"type": "string",
+				"enum": ["user", "admin"],
+				"example": "user"
+			},
+			"Name": {
+				"type": "string",
+				"example": "John Smith"
+			},
+			"Token": {
+				"type": "string",
+				"example": "abc"
+			},
+			"Auth": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"$ref": "#/components/schemas/Email"
+					},
+					"password": {
+						"$ref": "#/components/schemas/Password"
+					}
+				},
+				"required": ["email", "password"],
+				"additionalProperties": false
+			},
+			"User": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"$ref": "#/components/schemas/Email"
+					},
+					"name": {
+						"$ref": "#/components/schemas/Name"
+					},
+					"role": {
+						"$ref": "#/components/schemas/Role"
+					},
+					"userId": {
+						"$ref": "#/components/schemas/UserId"
+					}
+				},
+				"required": ["email", "name", "role"],
+				"additionalProperties": false
+			},
+			"Register": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"$ref": "#/components/schemas/Email"
+					},
+					"password": {
+						"$ref": "#/components/schemas/Password"
+					},
+					"name": {
+						"$ref": "#/components/schemas/Name"
+					},
+					"role": {
+						"type": "string",
+						"enum": ["user"],
+						"example": "user"
+					}
+				},
+				"required": ["email", "password", "name", "role"],
+				"additionalProperties": false
+			},
+			"Create": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"$ref": "#/components/schemas/Email"
+					},
+					"password": {
+						"$ref": "#/components/schemas/Password"
+					},
+					"name": {
+						"$ref": "#/components/schemas/Name"
+					},
+					"role": {
+						"$ref": "#/components/schemas/Role"
+					}
+				},
+				"required": ["email", "password", "name", "role"],
+				"additionalProperties": false
+			},
+			"Update": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"$ref": "#/components/schemas/Email"
+					},
+					"password": {
+						"$ref": "#/components/schemas/Password"
+					},
+					"name": {
+						"$ref": "#/components/schemas/Name"
+					},
+					"role": {
+						"$ref": "#/components/schemas/Role"
+					}
+				},
+				"required": ["email", "name", "role"],
+				"additionalProperties": false
+			},
+			"TokenResponse": {
+				"type": "object",
+				"properties": {
+					"accessToken": {
+						"$ref": "#/components/schemas/Token"
+					},
+					"refreshToken": {
+						"$ref": "#/components/schemas/Token"
+					}
+				},
+				"required": ["accessToken", "refreshToken"],
+				"additionalProperties": false
+			}
+		}
+	}
+}

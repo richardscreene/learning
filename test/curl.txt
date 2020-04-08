@@ -1,0 +1,7 @@
+curl localhost:3000/register -H "Content-Type: application/json" -d '{"email":"john.smith@example.com","password": "12345678","name":"John Smith","role":"user"}'
+curl localhost:3000/login -H "Content-Type: application/json" -d '{"email":"john.smith@example.com","password": "12345678"}'
+curl localhost:3000/forgot -H "Content-Type: application/json" -d '{"email":"john.smith@example.com"}'
+curl -H "Content-Type: application/json" -d '{"password":"87654321"}' localhost:3000/reset/TOKEN
+
+
+curl localhost:3000/users -H "Authorization: Bearer abc"
