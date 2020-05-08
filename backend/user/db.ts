@@ -46,9 +46,9 @@ MongoClient.connect(MONGO_URL, {
 		]);
 	})
 	.then(() => {
-		// create dummy admin user
+		// create dummy admin user if it doesn't already exist
 		//LATER - we shouldn't do this....
-		return insertOne(ADMIN_USER);
+		return collection.updateOne({ email: ADMIN_USER.email }, { "$set" : ADMIN_USER }, { upsert: true });
 	})
 	.catch(err => {
 		logger.error("Failed to connect to mongo", { err });
