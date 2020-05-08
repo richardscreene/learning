@@ -45,7 +45,7 @@ export default class UpdateUser extends React.Component {
           name={this.state.name}
           update={this.onChildChange.bind(this)}
         />
-        {(this.props.isAccountAdmin || this.props.user.role === "admin") && (
+        {this.props.isRoleUpdateable && (
           <Role
             role={this.props.user.role}
             update={this.onChildChange.bind(this)}
@@ -71,5 +71,5 @@ UpdateUser.propTypes = {
     name: PropTypes.string.isRequired,
     role: PropTypes.string.isRequired
   }),
-  isAccountAdmin: PropTypes.bool.isRequired
+  isRoleUpdateable: PropTypes.bool.isRequired
 };

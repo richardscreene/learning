@@ -7,11 +7,14 @@ import { userUpdateRequested } from "../actions";
 const mapStateToProps = (state, ownProps) => {
   const userId = ownProps.location.state.userId;
   // look for user either in user list or the account
+  let user = [...state.users, state.account].find(user => {
+    return user.userId === userId;
+  });
   return {
-    user: [...state.users, state.account].find(user => {
-      return user.userId === userId;
-    }),
-    isAccountAdmin: state.account.role === "admin"
+    user,
+    // role is updateable if we're logged in as admin or the users
+    // being edited is admin
+    isRoleUpdateable: state.account.role === "admin" || user.role === "admin"
   };
 };
 
