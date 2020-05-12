@@ -5,8 +5,8 @@ import * as logger from "./logger";
 import { Request, Response, NextFunction } from "express";
 import { User, Role } from "./types";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const AUTH_REGEX = /^Bearer\s+(.+)/;
+const JWT_SECRET: string = process.env.JWT_SECRET || "DUMMY_SECRET";
+const AUTH_REGEX: RegExp = /^Bearer\s+(.+)/;
 const JWT_ALGORITHM: string = "HS256";
 
 // used for generating both user and reset tokens so we'll accept any old object

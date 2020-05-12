@@ -8,20 +8,23 @@ const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
 //LATER - get this from somewhere sensible
 const SERVER_URL = "http://localhost:8080/reset/";
 
-const mg = mailgun.client({
-	username: "api",
-	key: MAILGUN_API_KEY
-});
-
+let mg;
+if (!MAILGUN_DOMAIN || !MAILGUN_API_KEY) {
+	logger.warn("Mailgun not configured");
+} else {
+	mg = mailgun.client({
+		username: "api",
+		key: MAILGUN_API_KEY
+	});
+}
+//MAILGUN_API_KEY='1af71837854dd722480d2e0b1776f097-aa4b0867-b2693930' MAILGUN_DOMAIN='sandboxa983a240f2c149a7bb79f9cb73ad6228.mailgun.org' JWT_SECRET='THIS-IS-THE-KEY'
 export function send(email: string, token: string): Promise<void> {
-	if (!MAILGUN_DOMAIN || !MAILGUN_API_KEY) {
-		logger.error("Mailgun not configured");
-		return Promise.reject(Boom.badImplementation("Mailer not configured"));
-	}
-
 	const link = join(SERVER_URL, token.replace(/\./g, ":"));
 
-	logger.info("Sending email with link=", { link });
+	if (!mg) {
+		logger.warn("Mailgun not configured - would send email with data=", { link });
+		return Promise.reject(Boom.badImplementation("Mailer not configured"));
+	}
 
 	return mg.messages
 		.create(MAILGUN_DOMAIN, {

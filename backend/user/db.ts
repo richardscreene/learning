@@ -3,7 +3,8 @@ import { MongoClient, ObjectID } from "mongodb";
 import { User, Auth, Role } from "./types";
 import * as Boom from "@hapi/boom";
 
-const DB_NAME: string = "demo";
+const DB_NAME: string = "redux-learning";
+//LATER - should be configurable
 const MONGO_URL: string = "mongodb://localhost/db";
 let dbo, collection;
 

@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "MAILGUN_API_KEY='1af71837854dd722480d2e0b1776f097-aa4b0867-b2693930' MAILGUN_DOMAIN='sandboxa983a240f2c149a7bb79f9cb73ad6228.mailgun.org' JWT_SECRET='THIS-IS-THE-KEY' nodemon -e js,ts,json -x 'ts-node' server.ts"
+    "dev": "nodemon -e js,ts,json -x 'ts-node' server.ts"
   },
   "repository": {
     "type": "git",
@@ -27,7 +27,7 @@
     "install": "^0.13.0",
     "jsonwebtoken": "^8.5.1",
     "mailgun.js": "^2.0.1",
-    "mongodb": "^3.5.6",
+    "mongodb": "^3.5.7",
     "npm": "^6.14.4",
     "winston": "^3.2.1"
   },
