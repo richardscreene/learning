@@ -4,8 +4,8 @@
   "description": "",
   "xmain": "index.js",
   "scripts": {
-    "dev": "webpack-dev-server --open —-mode=development --hot",
-    "build": "webpack —-mode=production",
+    "dev": "webpack-dev-server --open —-mode=development --hot --env.USER_API_URL=http://localhost:3000",
+    "build": "webpack --mode=production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

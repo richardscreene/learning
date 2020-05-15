@@ -23,59 +23,63 @@ export default class Header extends React.Component {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="mr-auto">
-            <Nav.Link as={Link} to="/home">
-              Home
-            </Nav.Link>
-            {this.props.account && this.props.account.role === "admin" && (
-              <Nav.Link as={Link} to="/users">
-                Users
-              </Nav.Link>
+            {this.props.account && (
+              <>
+                <Nav.Link as={Link} to="/home">
+                  Home
+                </Nav.Link>
+                {this.props.account.role === "admin" && (
+                  <Nav.Link as={Link} to="/users">
+                    Users
+                  </Nav.Link>
+                )}
+                <Nav.Link as={Link} to="/screen1">
+                  Screen1
+                </Nav.Link>
+                <Nav.Link as={Link} to="/screen2">
+                  Screen2
+                </Nav.Link>
+              </>
             )}
-            <Nav.Link as={Link} to="/screen1">
-              Screen1
-            </Nav.Link>
-            <Nav.Link as={Link} to="/screen2">
-              Screen2
-            </Nav.Link>
           </Nav>
-          {this.props.account ? (
-            <Nav>
-              <NavDropdown
-                title={this.props.account.name}
-                id="basic-nav-dropdown"
-              >
-                <NavDropdown.Item
-                  as={Link}
-                  to={{
-                    pathname: "/update",
-                    state: {
-                      userId: this.props.account.userId
-                    }
-                  }}
+          <Nav>
+            {this.props.account ? (
+              <>
+                <NavDropdown
+                  title={this.props.account.name}
+                  id="basic-nav-dropdown"
                 >
-                  Edit details
-                </NavDropdown.Item>
-                <NavDropdown.Item
-                  as={Link}
-                  to={{
-                    pathname: "/password"
-                  }}
-                >
-                  Change password
-                </NavDropdown.Item>
-              </NavDropdown>
+                  <NavDropdown.Item
+                    as={Link}
+                    to={{
+                      pathname: "/update",
+                      state: {
+                        userId: this.props.account.userId
+                      }
+                    }}
+                  >
+                    Edit details
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    as={Link}
+                    to={{
+                      pathname: "/password"
+                    }}
+                  >
+                    Change password
+                  </NavDropdown.Item>
+                </NavDropdown>
 
-              <Nav.Link onClick={this.onLogout.bind(this)}>
-                <FontAwesomeIcon icon={faSignOutAlt} title="Logout" />
-              </Nav.Link>
-            </Nav>
-          ) : (
-            <Nav>
+                <Nav.Link onClick={this.onLogout.bind(this)}>
+                  <FontAwesomeIcon icon={faSignOutAlt} title="Logout" />
+                </Nav.Link>
+              </>
+            ) : (
               <Nav.Link as={Link} to="/login">
                 <FontAwesomeIcon icon={faSignInAlt} title="Login" />
               </Nav.Link>
-            </Nav>
-          )}
+            )}
+          </Nav>
         </Navbar.Collapse>
       </Navbar>
     );

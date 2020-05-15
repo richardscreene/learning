@@ -1,4 +1,6 @@
 import { join } from "path";
+
+const serverless = require("serverless-http");
 import * as express from "express";
 import { Application, Request, Response, NextFunction } from "express";
 const app: Application = express();
@@ -10,14 +12,14 @@ import { User, Credentials } from "./types";
 
 import * as logger from "./logger";
 import * as user from "./user";
+import * as db from "./db";
 import * as authenticate from "./authenticate";
 
 const SPEC_FILE: string = join(__dirname, "api.json");
-const PORT: number = 3000;
 
 app.use(bodyParser.json());
-//LATER - CORS shouldn't be so lenient....
-app.use(cors());
+
+app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 
 new OpenApiValidator({
 	apiSpec: SPEC_FILE,
@@ -25,18 +27,31 @@ new OpenApiValidator({
 	validateResponses: true
 }).installSync(app);
 
-app.put("/login", (req: Request, res: Response, next: NextFunction) => {
-	user
-		.login(req.body)
-		.then((credentials: Credentials) => {
-			res.json(credentials);
-		})
-		.catch(next);
-});
+function isDbReady(req: Request, res: Response, next: NextFunction) {
+	if (db.ready()) {
+		next();
+	} else {
+		next(Boom.serverUnavailable("Database is not ready"));
+	}
+}
+
+app.put(
+	"/login",
+	isDbReady,
+	(req: Request, res: Response, next: NextFunction) => {
+		user
+			.login(req.body)
+			.then((credentials: Credentials) => {
+				res.json(credentials);
+			})
+			.catch(next);
+	}
+);
 
 app.put(
 	"/refresh",
 	authenticate.isRefreshValid,
+	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
 			.refresh(res.locals.user.userId, res.locals.token)
@@ -47,26 +62,35 @@ app.put(
 	}
 );
 
-app.post("/register", (req: Request, res: Response, next: NextFunction) => {
-	user
-		.register(req.body)
-		.then((credentials: Credentials) => {
-			res.json(credentials);
-		})
-		.catch(next);
-});
+app.post(
+	"/register",
+	isDbReady,
+	(req: Request, res: Response, next: NextFunction) => {
+		user
+			.register(req.body)
+			.then((credentials: Credentials) => {
+				res.json(credentials);
+			})
+			.catch(next);
+	}
+);
 
-app.put("/forgot", (req: Request, res: Response, next: NextFunction) => {
-	user
-		.forgot(req.body.email)
-		.then(() => {
-			res.send();
-		})
-		.catch(next);
-});
+app.put(
+	"/forgot",
+	isDbReady,
+	(req: Request, res: Response, next: NextFunction) => {
+		user
+			.forgot(req.body.email)
+			.then(() => {
+				res.send();
+			})
+			.catch(next);
+	}
+);
 
 app.put(
 	"/reset/:resetToken",
+	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
 			.reset(req.params.resetToken, req.body.password)
@@ -80,9 +104,8 @@ app.put(
 app.post(
 	"/logout",
 	authenticate.isRefreshValid,
+	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
-		console.log("user=", res.locals);
-		console.log("token=", res.locals.token);
 		return user
 			.logout(res.locals.user.userId, res.locals.token)
 			.then(() => {
@@ -95,6 +118,7 @@ app.post(
 app.put(
 	"/password",
 	authenticate.isRefreshValid,
+	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		return user
 			.password(res.locals.user.userId, req.body.password)
@@ -108,6 +132,7 @@ app.put(
 app.post(
 	"/users",
 	authenticate.isAdmin,
+	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
 			.create(req.body)
@@ -121,6 +146,7 @@ app.post(
 app.get(
 	"/users/:userId",
 	authenticate.isAccessValid,
+	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		if (res.locals.user.role === "admin") {
 			next();
@@ -143,6 +169,7 @@ app.get(
 app.put(
 	"/users/:userId",
 	authenticate.isAccessValid,
+	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		if (res.locals.user.role === "admin") {
 			next();
@@ -166,6 +193,7 @@ app.put(
 
 app.delete(
 	"/users/:userId",
+	isDbReady,
 	authenticate.isAdmin,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
@@ -179,6 +207,7 @@ app.delete(
 
 app.patch(
 	"/users/:userId",
+	isDbReady,
 	authenticate.isAdmin,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
@@ -192,6 +221,7 @@ app.patch(
 
 app.get(
 	"/users",
+	isDbReady,
 	authenticate.isAdmin,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
@@ -212,6 +242,10 @@ app.use((err, req: Request, res: Response, next: NextFunction) => {
 	}
 });
 
-app.listen(PORT, () => {
-	logger.info("Server listening on port", PORT);
+const handler = serverless(app, {
+	request: (req, event, context) => {
+		context.callbackWaitsForEmptyEventLoop = false;
+	}
 });
+
+export { app, handler };

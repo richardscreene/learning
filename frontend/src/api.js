@@ -2,8 +2,7 @@ import axios from "axios";
 import combineUrls from "axios/lib/helpers/combineURLs";
 import { raiseError, loginUpdate, logoutSucceeded } from "./actions";
 
-//LATER - get this from somewhere sensible
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = process.env.USER_API_URL;
 const USERS_URL = combineUrls(BASE_URL, "/users");
 
 const URL = {
