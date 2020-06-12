@@ -1,12 +1,21 @@
 import * as logger from "./logger";
 import { MongoClient, ObjectID } from "mongodb";
+import { MemClient } from "./memdb";
+
 import { User, Auth, Role } from "./types";
 import * as Boom from "@hapi/boom";
 
 const DB_NAME: string = "redux-learning";
-//LATER - should be configurable
-const MONGO_URL: string = "mongodb://localhost/db";
+const MONGO_URL: string = process.env.MONGO_URL;
 let dbo, collection;
+let isReady: boolean = false;
+
+let DbClient;
+if (MONGO_URL) {
+	DbClient = MongoClient;
+} else {
+	DbClient = MemClient;
+}
 
 const COLLATION: object = { locale: "en", strength: 2 };
 const ADMIN_USER: User = {
@@ -22,7 +31,7 @@ const ADMIN_USER: User = {
 	}
 };
 
-MongoClient.connect(MONGO_URL, {
+DbClient.connect(MONGO_URL, {
 	useUnifiedTopology: true,
 	useNewUrlParser: true,
 	reconnectTries: Number.MAX_VALUE,
@@ -49,7 +58,14 @@ MongoClient.connect(MONGO_URL, {
 	.then(() => {
 		// create dummy admin user if it doesn't already exist
 		//LATER - we shouldn't do this....
-		return collection.updateOne({ email: ADMIN_USER.email }, { "$set" : ADMIN_USER }, { upsert: true });
+		return collection.updateOne(
+			{ email: ADMIN_USER.email },
+			{ $set: ADMIN_USER },
+			{ upsert: true }
+		);
+	})
+	.then(() => {
+		isReady = true;
 	})
 	.catch(err => {
 		logger.error("Failed to connect to mongo", { err });
@@ -77,7 +93,7 @@ export function insertOne(user: User): Promise<User> {
 	return collection
 		.insertOne(user)
 		.then(result => {
-			if (result.insertedCount === 1) {
+			if (result && result.insertedCount === 1) {
 				// include the userId in the result
 				return Promise.resolve(fromDb(result.ops[0]));
 			} else {
@@ -126,7 +142,7 @@ export function findById(id: string): Promise<User> {
 
 export function deleteById(id: string): Promise<void> {
 	return collection.deleteOne({ _id: ObjectID(id) }).then(result => {
-		if (result.result && result.result.n === 0) {
+		if (result && result.result && result.result.n === 0) {
 			return Promise.reject(Boom.notFound("User not found"));
 		} else {
 			return Promise.resolve();
@@ -158,4 +174,8 @@ export function updateById(
 				return Promise.resolve(fromDb(result.value));
 			}
 		});
+}
+
+export function ready() {
+	return isReady;
 }
