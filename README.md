@@ -50,4 +50,3 @@ For admin rights use the default user bob@example.com (password 12345678).
 # TODO
 
 Lots more testing - particularly frontend.
-Pagination icons do not appear
