@@ -8,7 +8,7 @@ import users from "../pages/users";
 import create from "../pages/create";
 import update from "../pages/update";
 import password from "../pages/password";
-import screen1 from "../pages/screen1";
+import chat from "../pages/chat";
 import screen2 from "../pages/screen2";
 import Header from "../containers/Header";
 import Error from "../containers/Error";
@@ -31,7 +31,7 @@ export default class App extends React.Component {
             <Route exact path="/create" component={create} />
             <Route exact path="/update" component={update} />
             <Route exact path="/password" component={password} />
-            <Route exact path="/screen1" component={screen1} />
+            <Route exact path="/chat" component={chat} />
             <Route exact path="/screen2" component={screen2} />
             <Route path="/reset/:resetToken" component={reset} />
           </Switch>

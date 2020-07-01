@@ -4,7 +4,7 @@ import { Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 
-export default class User extends React.Component {
+export default class Home extends React.Component {
   constructor(props) {
     super(props);
   }

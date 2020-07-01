@@ -1,0 +1,33 @@
+{
+  "name": "chat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon -e js,ts,json -x 'ts-node' server.ts",
+    "build": "tsc -p .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/richardscreene/redux-learning.git"
+  },
+  "author": "Richard Screene",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/richardscreene/redux-learning/issues"
+  },
+  "homepage": "https://github.com/richardscreene/redux-learning#readme",
+  "dependencies": {
+    "@types/express": "^4.17.6",
+    "@types/socket.io": "^2.1.8",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "serverless-http": "^2.5.0",
+    "socket.io": "^2.3.0",
+    "socketio-auth": "^0.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
