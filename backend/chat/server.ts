@@ -39,8 +39,10 @@ io.use((socket, next) => {
     });
 });
 
+const MY_ROOM="my-room";
 io.on("connection", socket => {
   console.log("a user connected");
+  socket.join(MY_ROOM);
 
   socket.on("disconnect", socket => {
     console.log("a user disconnected");
@@ -48,6 +50,7 @@ io.on("connection", socket => {
 
   socket.on("message", message => {
     console.log("a user messaged", message);
+    socket.to(MY_ROOM).emit("message", message);
   });
 });
 
