@@ -17,7 +17,7 @@ export default class Chat extends React.Component {
 
   componentDidMount() {
     console.log("Mounting the home page");
-    //TODO - this should be moved to AI so it can use the same token
+    //TODO - this should be moved to API so it can use the same token
     this.socketio = socketio(ENDPOINT);
 
     this.socketio.on("connect", () => {
@@ -25,12 +25,14 @@ export default class Chat extends React.Component {
       this.socketio.emit("authentication", { token: "some shit" });
       this.socketio.on("authenticated", () => {
         console.log("Authenticated");
+        // only handle messages once we authenticated
+        this.socketio.on("message", (message) => {
+          console.log("RX MSG=", message);
+        });
       });
       this.socketio.on("unauthorized", err => {
         console.log("auth err=", err);
-        //TODO - could send request before authentication.... need flag or something.....
-        //TODO - do something cleverer...
-        this.socketio.disconnect();
+        //TODO - refresh access token and try again...
       });
     });
   }

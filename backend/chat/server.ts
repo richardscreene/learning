@@ -11,6 +11,7 @@ import * as authenticate from "../user/authenticate";
 const http = require("http").Server(app);
 //var server = require("http").Server(app);
 const io = require("socket.io").listen(http);
+//NB. socketio-auth is no longer supported
 require("socketio-auth")(io, {
   authenticate: (socket, data, cb) => {
     console.log("authenticating...", data);
