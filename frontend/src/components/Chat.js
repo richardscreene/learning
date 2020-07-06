@@ -50,43 +50,57 @@ export default class Chat extends React.Component {
     this.socketio.on("connect", () => {
       console.log("connected");
       this.socketio.on("message", message => {
-
         console.log("RX MSG=", message);
 
         if (message.type === "offer") {
           //TODO - check state properly
-          if (!this.pc) {
+          if (this.pc) {
             console.warn("Already in progress");
+            return;
           }
           this.pc = new RTCPeerConnection(pcOptions);
-          this.pc.addEventListener("icecandidate", this.onIceCandidate.bind(this));
+          this.pc.addEventListener(
+            "icecandidate",
+            this.onIceCandidate.bind(this)
+          );
 
-          this.localStream.getTracks().forEach(track => this.pc.addTrack(track, this.localStream));
+          this.localStream
+            .getTracks()
+            .forEach(track => this.pc.addTrack(track, this.localStream));
 
-          this.pc.ontrack = (event) => {
-            console.log("GOT REMOTE STREAM");
-            this.remoteVideo.current.srcObject = event.streams[0];
+          this.pc.ontrack = event => {
+            console.log("GOT REMOTE STREAM", event);
+            if (event.streams[0]) {
+              this.remoteVideo.current.srcObject = event.streams[0];
+            }
           };
 
-          this.pc.setRemoteDescription(message).then(() => {
-            console.log("A");
-            return this.pc.createAnswer(answerOptions);
-          }).then((desc) => {
-            console.log("B");
-            return this.pc.setLocalDescription(desc).then(() => {
-              return Promise.resolve(desc);
+          this.pc
+            .setRemoteDescription(message)
+            .then(() => {
+              console.log("A");
+              return this.pc.createAnswer(answerOptions);
+            })
+            .then(desc => {
+              console.log("B");
+              return this.pc.setLocalDescription(desc).then(() => {
+                return Promise.resolve(desc);
+              });
+            })
+            .then(desc => {
+              console.log("C");
+              this.socketio.emit("message", desc);
             });
-          }).then((desc) => {
-            console.log("C");
-            this.socketio.emit("message", desc);
-          });
         } else if (message.type === "answer") {
           console.log("GOT AN ANSWER");
-          this.pc.setRemoteDescription(message).then(() => {
-            console.log("Set remote descriptioN");
-          }).catch((err) => {
-            console.warn("Failed ot set remote", err);
-          });
+          this.pc
+            .setRemoteDescription(message)
+            .then(() => {
+              console.log("Set remote descriptioN");
+            })
+            .catch(err => {
+              console.warn("Failed ot set remote", err);
+            });
         } else if (typeof message.candidate === "string") {
           console.log("Candidate", message);
           this.pc.addIceCandidate(message);
@@ -95,6 +109,15 @@ export default class Chat extends React.Component {
     });
 
     this.initialise();
+  }
+
+  componentWillUnmount() {
+    if (this.pc) {
+      this.pc.close();
+    }
+    if (this.socketio) {
+      this.socketio.close();
+    }
   }
 
   //TODO - show local smaller....
@@ -120,12 +143,16 @@ export default class Chat extends React.Component {
     this.pc = new RTCPeerConnection(pcOptions);
     this.pc.addEventListener("icecandidate", this.onIceCandidate.bind(this));
 
-    this.localStream.getTracks().forEach(track => this.pc.addTrack(track, this.localStream));
+    this.localStream
+      .getTracks()
+      .forEach(track => this.pc.addTrack(track, this.localStream));
 
-    //TODO - don't repeat
-    this.pc.ontrack = (event) => {
-      console.log("GOT REMOTE STREAM");
-      this.remoteVideo.current.srcObject = event.streams[0];
+    //TODO - don't repeat this function
+    this.pc.ontrack = event => {
+      console.log("GOT REMOTE STREAM", event);
+      if (event.streams[0]) {
+        this.remoteVideo.current.srcObject = event.streams[0];
+      }
     };
 
     this.pc
@@ -168,7 +195,7 @@ export default class Chat extends React.Component {
       .catch(error => {
         this.errorCallback(error);
       });
-}
+  }
 
   onClick(e) {
     const target = e.target;
@@ -190,8 +217,8 @@ export default class Chat extends React.Component {
           Chat!
         </Button>
 
-        <video autoPlay={true} ref={this.localVideo}></video>
-          <video id="localVideo" autoPlay={true} ref={this.remoteVideo}></video>
+        <video autoPlay={true} ref={this.localVideo} muted></video>
+        <video autoPlay={true} ref={this.remoteVideo}></video>
 
         <Form onSubmit={this.onSubmit.bind(this)}>
           <Form.Group>

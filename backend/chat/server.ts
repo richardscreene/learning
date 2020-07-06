@@ -41,7 +41,7 @@ io.use((socket, next) => {
 
 const MY_ROOM="my-room";
 io.on("connection", socket => {
-  console.log("a user connected");
+  console.log("a user connected", socket.id);
   socket.join(MY_ROOM);
 
   socket.on("disconnect", socket => {
@@ -49,7 +49,7 @@ io.on("connection", socket => {
   });
 
   socket.on("message", message => {
-    console.log("a user messaged", message);
+    console.log("a user messaged", socket.id, message.type || "NA");
     socket.to(MY_ROOM).emit("message", message);
   });
 });
