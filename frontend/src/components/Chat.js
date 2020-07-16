@@ -217,8 +217,40 @@ export default class Chat extends React.Component {
           Chat!
         </Button>
 
-        <video autoPlay={true} ref={this.localVideo} muted></video>
-        <video autoPlay={true} ref={this.remoteVideo}></video>
+        <div
+          style={{
+            position: "relative",
+            display: "inline-block",
+            "min-width": "500px",
+            "min-height": "auto"
+          }}
+        >
+          <div
+            style={{
+              display: "inline-block",
+              zIndex: 2
+            }}
+          >
+            <video autoPlay={true} ref={this.remoteVideo}></video>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              top: "80%",
+              left: "80%",
+              display: "inline-block",
+              zIndex: 1
+            }}
+          >
+            <video
+              width="100px"
+              height="auto"
+              autoPlay={true}
+              ref={this.localVideo}
+              muted
+            ></video>
+          </div>
+        </div>
 
         <Form onSubmit={this.onSubmit.bind(this)}>
           <Form.Group>
