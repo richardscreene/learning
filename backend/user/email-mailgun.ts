@@ -17,7 +17,7 @@ if (!MAILGUN_DOMAIN || !MAILGUN_API_KEY) {
 		key: MAILGUN_API_KEY
 	});
 }
-//MAILGUN_API_KEY='1af71837854dd722480d2e0b1776f097-aa4b0867-b2693930' MAILGUN_DOMAIN='sandboxa983a240f2c149a7bb79f9cb73ad6228.mailgun.org' JWT_SECRET='THIS-IS-THE-KEY'
+
 export function send(email: string, token: string): Promise<void> {
 	const link = join(SERVER_URL, token.replace(/\./g, ":"));
 
