@@ -6,6 +6,7 @@ import { User, Role } from "../user/types";
 import * as Boom from "@hapi/boom";
 
 import * as authenticate from "../user/authenticate";
+const AUTH_REGEX: RegExp = /^Bearer\s+(.+)/;
 
 const http = require("http");
 const server = http.createServer(app);
@@ -23,12 +24,35 @@ const io = require("socket.io")(server, {
   }
 });
 
+let sockets = new WeakMap();
+let connected = null;
+
 io.use((socket, next) => {
-  const token = socket.handshake.headers["authorization"];
-  console.log("token=", token);
-  authenticate
-    .verify(token)
+  return Promise.resolve()
+    .then(() => {
+      const bearerToken = socket.handshake.headers["authorization"];
+      console.log("bearerToken=", bearerToken);
+      if (!bearerToken) {
+        return Promise.reject(
+          Boom.unauthorized("Badly formed authorization header")
+        );
+      } else {
+        //TODO - can we share the regex in authenticate
+        let parts = bearerToken.match(AUTH_REGEX);
+        if (!parts) {
+          return Promise.reject(
+            Boom.unauthorized("Badly formed authorization header")
+          );
+        } else {
+          return Promise.resolve(parts[1]);
+        }
+      }
+    })
+    .then(token => {
+      return authenticate.verify(token);
+    })
     .then((user: User) => {
+      sockets.set(socket, user);
       console.log("user=", user);
       next();
     })
@@ -39,10 +63,10 @@ io.use((socket, next) => {
     });
 });
 
-const MY_ROOM="my-room";
+//const MY_ROOM="my-room";
 io.on("connection", socket => {
   console.log("a user connected", socket.id);
-  socket.join(MY_ROOM);
+  //socket.join(MY_ROOM);
 
   socket.on("disconnect", socket => {
     console.log("a user disconnected");
@@ -50,7 +74,17 @@ io.on("connection", socket => {
 
   socket.on("message", message => {
     console.log("a user messaged", socket.id, message.type || "NA");
-    socket.to(MY_ROOM).emit("message", message);
+    if (message.type === "connect") {
+      //TODO - maybe use WeakMap to ensure no memory leak
+      if (connected) {
+        socket.emit("message", { type: "connected", user: sockets.get(connected) });
+        connected.emit("message", { type: "connected", user: sockets.get(socket) });
+        connected = null;
+      } else {
+        console.log("Wait for another user");
+        connected = socket;
+      }
+    }
   });
 });
 

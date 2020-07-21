@@ -1,12 +1,9 @@
 import React from "react";
-import { Form, Button } from "react-bootstrap";
+import { Form, Button, Spinner } from "react-bootstrap";
 
 //import { Link } from "react-router-dom";
 //import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 //import { faUser } from "@fortawesome/free-solid-svg-icons";
-import socketio from "socket.io-client";
-
-const ENDPOINT = "http://127.0.0.1:3001";
 const offerOptions = {
   offerToReceiveAudio: true,
   offerToReceiveVideo: true
@@ -25,7 +22,8 @@ export default class Chat extends React.Component {
     super(props);
     this.state = {
       localSource: null,
-      remoteSource: null
+      remoteSource: null,
+      isConnecting: false
     };
     this.input = React.createRef();
     this.localVideo = React.createRef();
@@ -36,19 +34,10 @@ export default class Chat extends React.Component {
 
   componentDidMount() {
     console.log("Mounting the home page");
-    //TODO - this should be moved to API so it can use the same token
-    this.socketio = socketio(ENDPOINT, {
-      transportOptions: {
-        polling: {
-          extraHeaders: {
-            authorization: "some shit"
-          }
-        }
-      }
-    });
+    this.props.chatConnectRequested();
 
-    this.socketio.on("connect", () => {
-      console.log("connected");
+    /*
+
       this.socketio.on("message", message => {
         console.log("RX MSG=", message);
 
@@ -107,7 +96,7 @@ export default class Chat extends React.Component {
         }
       });
     });
-
+*/
     this.initialise();
   }
 
@@ -115,17 +104,6 @@ export default class Chat extends React.Component {
     if (this.pc) {
       this.pc.close();
     }
-    if (this.socketio) {
-      this.socketio.close();
-    }
-  }
-
-  //TODO - show local smaller....
-  onSubmit(e) {
-    const target = e.target;
-    console.log("Message=", this.input.current.value);
-    this.socketio.emit("message", this.input.current.value);
-    e.preventDefault();
   }
 
   successCallback(stream) {
@@ -140,6 +118,7 @@ export default class Chat extends React.Component {
 
   //TODO - hangup
   call() {
+    //TODO is this.pc truthy - then ignore
     this.pc = new RTCPeerConnection(pcOptions);
     this.pc.addEventListener("icecandidate", this.onIceCandidate.bind(this));
 
@@ -166,7 +145,7 @@ export default class Chat extends React.Component {
       .then(desc => {
         console.log("Set local descroption");
         //TODO - include name/userId in offer/answer message
-        this.socketio.emit("message", desc);
+        this.props.chatMessageRequested({ type: "connect" });
       })
       .catch(err => {
         console.log("err=", err);
@@ -176,7 +155,7 @@ export default class Chat extends React.Component {
   onIceCandidate(event) {
     console.log("event=", event);
     if (event && event.candidate) {
-      this.socketio.emit("message", event.candidate);
+      this.props.chatMessageRequested(event.candidate);
     }
   }
 
@@ -200,7 +179,14 @@ export default class Chat extends React.Component {
   onClick(e) {
     const target = e.target;
     console.log("Chatting....");
-    this.call();
+    this.setState({
+      isConnecting: true
+    });
+
+    this.props.chatMessageRequested({ type: "connect" });
+    // on succeeded then this.call();
+
+
     e.preventDefault();
   }
 
@@ -214,15 +200,25 @@ export default class Chat extends React.Component {
           size="lg"
           block
         >
-          Chat!
+          {this.state.isConnecting ? (
+            <Spinner
+              as="span"
+              animation="border"
+              size="sm"
+              role="status"
+              aria-hidden="true"
+            />
+          ) : (
+            "Connect!"
+          )}
         </Button>
 
         <div
           style={{
             position: "relative",
             display: "inline-block",
-            "min-width": "500px",
-            "min-height": "auto"
+            minWidth: "500px",
+            minHeight: "auto"
           }}
         >
           <div
@@ -251,20 +247,6 @@ export default class Chat extends React.Component {
             ></video>
           </div>
         </div>
-
-        <Form onSubmit={this.onSubmit.bind(this)}>
-          <Form.Group>
-            <Form.Label>Message</Form.Label>
-            <Form.Control
-              type="string"
-              name="message"
-              placeholder="A message to be sent"
-              defaultValue=""
-              required
-              ref={this.input}
-            />
-          </Form.Group>
-        </Form>
       </>
     );
   }

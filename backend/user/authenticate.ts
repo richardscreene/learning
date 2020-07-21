@@ -19,6 +19,7 @@ export function sign(obj: object, expiresIn: string): Promise<string> {
 
 export function verify(token: string): Promise<User> {
 	return promisify(jwt.verify)(token, JWT_SECRET).catch(err => {
+		console.log("err.name=", err.name);
 		switch (err.name) {
 		case "TokenExpiredError":
 		case "JsonWebTokenError":

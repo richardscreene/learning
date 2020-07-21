@@ -2,7 +2,7 @@ import { call, put, takeLatest } from "redux-saga/effects";
 import "regenerator-runtime/runtime";
 import history from "../history";
 import * as actions from "../actions";
-import * as api from "../api";
+import * as http from "../http";
 import * as connection from "./connection";
 
 function generateError(err) {
@@ -19,7 +19,7 @@ function* initialise() {
   const refreshToken = localStorage.getItem("refreshToken");
   if (refreshToken) {
     try {
-      const credentials = yield call(api.refresh, refreshToken);
+      const credentials = yield call(http.refresh, refreshToken);
       connection.set(credentials.accessToken);
       yield put(actions.accountLoginUpdated(connection.account()));
     } catch (err) {
@@ -30,7 +30,7 @@ function* initialise() {
 
 function* login(action) {
   try {
-    const credentials = yield call(api.login, action.email, action.password);
+    const credentials = yield call(http.login, action.email, action.password);
     localStorage.setItem("refreshToken", credentials.refreshToken);
     connection.set(credentials.accessToken);
     yield put(actions.accountLoginUpdated(connection.account()));
@@ -43,7 +43,7 @@ function* login(action) {
 function* password(action) {
   try {
     const refreshToken = localStorage.getItem("refreshToken");
-    const credentials = yield call(api.password, refreshToken, action.password);
+    const credentials = yield call(http.password, refreshToken, action.password);
     localStorage.setItem("refreshToken", credentials.refreshToken);
     connection.set(credentials.accessToken);
     history.goBack();
@@ -54,7 +54,7 @@ function* password(action) {
 
 function* register(action) {
   try {
-    const credentials = yield call(api.register, action.account);
+    const credentials = yield call(http.register, action.account);
     localStorage.setItem("refreshToken", credentials.refreshToken);
     connection.set(credentials.accessToken);
     yield put(actions.accountLoginUpdated(connection.account()));
@@ -66,7 +66,7 @@ function* register(action) {
 
 function* forgot(action) {
   try {
-    yield call(api.forgot, action.email);
+    yield call(http.forgot, action.email);
   } catch (err) {
     yield put(generateError(err));
   }
@@ -74,7 +74,7 @@ function* forgot(action) {
 
 function* reset(action) {
   try {
-    const credentials = yield call(api.reset, action.token, action.password);
+    const credentials = yield call(http.reset, action.token, action.password);
     localStorage.setItem("refreshToken", credentials.refreshToken);
     connection.set(credentials.accessToken);
     yield put(actions.accountLoginUpdated(connection.account()));
@@ -87,7 +87,7 @@ function* reset(action) {
 function* logout(action) {
   try {
     const refreshToken = localStorage.getItem("refreshToken");
-    yield call(api.logout, refreshToken);
+    yield call(http.logout, refreshToken);
   } catch (err) {
     // we do not generate an error if logout fails
   } finally {

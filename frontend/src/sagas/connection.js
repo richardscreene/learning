@@ -1,6 +1,5 @@
 import { call, put } from "redux-saga/effects";
 import * as actions from "../actions";
-import * as api from "../api";
 
 let accessToken;
 let accountObj = {};
