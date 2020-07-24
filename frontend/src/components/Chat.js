@@ -33,7 +33,7 @@ export default class Chat extends React.Component {
   }
 
   componentWillUnmount() {
-    //TODO - send disconnect
+    this.props.chatDisconnectRequested();
   }
 
   componentDidUpdate(prevProps) {
