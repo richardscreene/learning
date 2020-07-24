@@ -1,17 +1,18 @@
 import { connect } from "react-redux";
 import Chat from "../components/Chat";
-import { chatConnectRequested, chatMessageRequested } from "../actions";
+import { chatConnectRequested, chatDisconnectRequested } from "../actions";
 
 const mapStateToProps = (state, ownProps) => {
+  console.log("MAPPING STATE", state, ownProps);
   return {
-    //authed: state.account && state.account.role === "admin",
-    //users: state.users
+    participant: state.chat.participant,
+    remoteStream: state.chat.remoteStream
   };
 };
 
 const mapDispatchToProps = {
   chatConnectRequested,
-  chatMessageRequested
+  chatDisconnectRequested
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Chat);

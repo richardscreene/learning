@@ -1,5 +1,12 @@
-export const chatConnectRequested = () => ({
-  type: "CHAT_CONNECT_REQUESTED"
+export const chatConnectRequested = localStream => ({
+  type: "CHAT_CONNECT_REQUESTED",
+  localStream
+});
+
+export const chatConnectSucceeded = (participant, remoteStream) => ({
+  type: "CHAT_CONNECT_SUCCEEDED",
+  participant,
+  remoteStream
 });
 
 export const chatDisconnectRequested = () => ({
@@ -8,14 +15,4 @@ export const chatDisconnectRequested = () => ({
 
 export const chatDisconnectSucceeded = () => ({
   type: "CHAT_DISCONNECT_SUCCEEDED"
-});
-
-export const chatMessageReceived = message => ({
-  type: "CHAT_MESSAGE_RECEIVED",
-  message
-});
-
-export const chatMessageRequested = message => ({
-  type: "CHAT_MESSAGE_REQUESTED",
-  message
 });

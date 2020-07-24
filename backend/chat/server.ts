@@ -63,28 +63,40 @@ io.use((socket, next) => {
     });
 });
 
-//const MY_ROOM="my-room";
+const MY_ROOM="my-room";
 io.on("connection", socket => {
   console.log("a user connected", socket.id);
-  //socket.join(MY_ROOM);
+  socket.join(MY_ROOM);
+
+  //TODO - maybe use WeakMap to ensure no memory leak
+  if (connected) {
+    console.log("Connecting", socket.id, connected.id);
+    // TODO generate a unique ID across multiple instances, cannot use userId
+    // since the same user might appear multiple times (esp. during testing)
+    socket.emit("message", {
+      type: "connected",
+      id: connected.id,
+      user: sockets.get(connected)
+    });
+    connected.emit("message", {
+      type: "connected",
+      id: socket.id,
+      user: sockets.get(socket)
+    });
+  } else {
+    console.log("Wait for another user");
+    connected = socket;
+  }
 
   socket.on("disconnect", socket => {
     console.log("a user disconnected");
+    connected = null;
   });
 
   socket.on("message", message => {
     console.log("a user messaged", socket.id, message.type || "NA");
-    if (message.type === "connect") {
-      //TODO - maybe use WeakMap to ensure no memory leak
-      if (connected) {
-        socket.emit("message", { type: "connected", user: sockets.get(connected) });
-        connected.emit("message", { type: "connected", user: sockets.get(socket) });
-        connected = null;
-      } else {
-        console.log("Wait for another user");
-        connected = socket;
-      }
-    }
+    //TODO - don't use rooms - sio might be distributed
+    socket.to(MY_ROOM).emit("message", message);
   });
 });
 

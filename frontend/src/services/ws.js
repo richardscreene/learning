@@ -38,7 +38,7 @@ console.log("token=", accessToken);
           console.log("disconnected");
           sio = null;
         });
-        resolve();
+        resolve(sio.id);
       });
 
       sio.on("error", (err) => {
@@ -50,8 +50,9 @@ console.log("token=", accessToken);
   }
 }
 
+//TODO - should we re-connect on failure???
 //TODO - should we connect when we send first message?  then we don't need to pass WsConnect around
-export function message(accessToken, message) {
+export function send(accessToken, message) {
   console.log("Send message=", message);
   if (!sio) {
     return Promise.resolve(); //TODO - should be error
