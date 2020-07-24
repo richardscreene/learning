@@ -1,6 +1,6 @@
 import axios from "axios";
 import combineUrls from "axios/lib/helpers/combineURLs";
-import { raiseError, loginUpdate, logoutSucceeded } from "./actions";
+import { raiseError, loginUpdate, logoutSucceeded } from "../actions";
 
 const BASE_URL = process.env.USER_API_URL;
 const USERS_URL = combineUrls(BASE_URL, "/users");

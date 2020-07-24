@@ -1,5 +1,5 @@
 import socketio from "socket.io-client";
-import { raiseError, messageUpdate } from "./actions";
+import { raiseError, messageUpdate } from "../actions";
 
 //TODO _ handle expired tokens
 

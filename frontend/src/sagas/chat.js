@@ -2,8 +2,8 @@ import { call, put, takeLatest } from "redux-saga/effects";
 import "regenerator-runtime/runtime";
 import history from "../history";
 import * as actions from "../actions";
-import * as http from "../http";
-import * as ws from "../ws";
+import * as http from "../services/http";
+import * as ws from "../services/ws";
 import * as connection from "./connection";
 
 //TODO - this is shared with users.js

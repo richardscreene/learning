@@ -2,7 +2,7 @@ import { call, put, takeLatest } from "redux-saga/effects";
 import "regenerator-runtime/runtime";
 import history from "../history";
 import * as actions from "../actions";
-import * as http from "../http";
+import * as http from "../services/http";
 import * as connection from "./connection";
 
 function generateError(err) {

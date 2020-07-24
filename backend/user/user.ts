@@ -26,6 +26,7 @@ function generateHash(password: string): Promise<Auth> {
 	);
 }
 
+//TODO - should be constant time comparison
 function validateHash(
 	password: string,
 	hash: string,
