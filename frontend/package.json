@@ -4,7 +4,7 @@
   "description": "",
   "xmain": "index.js",
   "scripts": {
-    "dev": "webpack-dev-server --open —-mode=development --hot --env.USER_API_URL=http://localhost:3000",
+    "dev": "webpack-dev-server --open —-mode=development --hot --env.USER_API_URL=http://localhost:3000 --env.CHAT_API_URL=http://localhost:3001",
     "build": "webpack --mode=production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -25,7 +25,8 @@
     "react-router-dom": "^5.1.2",
     "react-tap-event-plugin": "^3.0.3",
     "redux": "^4.0.5",
-    "redux-saga": "^1.1.3"
+    "redux-saga": "^1.1.3",
+    "socket.io-client": "^2.3.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",

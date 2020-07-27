@@ -1,10 +1,12 @@
 import React from "react";
 import ReactRouterDOM from "react-router-dom";
+import Chat from "../containers/Chat";
 
-export default function screen1() {
+export default function chat() {
   return (
     <div>
-      <h1>Screen1</h1>
+      <h1>Chat</h1>
+      <Chat />
     </div>
   );
 }

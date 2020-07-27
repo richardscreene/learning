@@ -9,7 +9,6 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 const USERS_PER_PAGE = 25;
 
-//TODO - icons are faulty
 export default class Users extends React.Component {
   constructor(props) {
     super(props);

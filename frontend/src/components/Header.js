@@ -25,16 +25,13 @@ export default class Header extends React.Component {
           <Nav className="mr-auto">
             {this.props.account && (
               <>
-                <Nav.Link as={Link} to="/home">
-                  Home
-                </Nav.Link>
                 {this.props.account.role === "admin" && (
                   <Nav.Link as={Link} to="/users">
                     Users
                   </Nav.Link>
                 )}
-                <Nav.Link as={Link} to="/screen1">
-                  Screen1
+                <Nav.Link as={Link} to="/chat">
+                  Chat
                 </Nav.Link>
                 <Nav.Link as={Link} to="/screen2">
                   Screen2

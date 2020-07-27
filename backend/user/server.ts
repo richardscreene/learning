@@ -19,7 +19,7 @@ const SPEC_FILE: string = join(__dirname, "api.json");
 
 app.use(bodyParser.json());
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || true }));
 
 new OpenApiValidator({
 	apiSpec: SPEC_FILE,
