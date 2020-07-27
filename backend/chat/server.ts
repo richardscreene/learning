@@ -6,12 +6,19 @@ import { User, Role } from "../user/types";
 import * as Boom from "@hapi/boom";
 
 import * as authenticate from "../user/authenticate";
-const AUTH_REGEX: RegExp = /^Bearer\s+(.+)/;
+
+//LATER - we want to be able to horizontally scale ths service.
+// simple solution would be to limit connections to within the same service,
+// ie. a connection from service A would have to wait for another connection
+// to service A.
+// Alternatively, we could use socket.io redis clusters which will do all
+// of the hard work.
+// NB. the websocket is only connected while the peers exchange signalling
+// information.  This should make it easy to deploy as a lambda function.
 
 const http = require("http");
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
-  //TODO - there must be better way to handle CORS
   handlePreflightRequest: (req, res) => {
     const headers = {
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -24,8 +31,9 @@ const io = require("socket.io")(server, {
   }
 });
 
-let sockets = new WeakMap();
-let connected = null;
+let users = new WeakMap();
+let peers = new WeakMap();
+let waiting = null;
 
 io.use((socket, next) => {
   return Promise.resolve()
@@ -37,7 +45,7 @@ io.use((socket, next) => {
       return authenticate.verify(token);
     })
     .then((user: User) => {
-      sockets.set(socket, user);
+      users.set(socket, user);
       console.log("user=", user);
       next();
     })
@@ -47,39 +55,46 @@ io.use((socket, next) => {
     });
 });
 
-const MY_ROOM = "my-room";
+// we don't use rooms 'cos the users are likely to be spread
+// across multiple instances
+
 io.on("connection", socket => {
   console.log("a user connected", socket.id);
-  socket.join(MY_ROOM);
 
-  //TODO - maybe use WeakMap to ensure no memory leak
-  if (connected) {
-    console.log("Connecting", socket.id, connected.id);
+  if (waiting) {
+    console.log("Connecting", socket.id, waiting.id);
     socket.emit("message", {
       type: "caller",
-      user: sockets.get(connected)
+      user: users.get(waiting)
     });
-    connected.emit("message", {
+    waiting.emit("message", {
       type: "callee",
-      user: sockets.get(socket)
+      user: users.get(socket)
     });
+    peers.set(socket, waiting);
+    peers.set(waiting, socket);
   } else {
     console.log("Wait for another user");
-    connected = socket;
+    waiting = socket;
   }
 
   socket.on("disconnect", socket => {
     console.log("a user disconnected");
-    if (connected.id === socket.id) {
-      connected = null;
+    if (waiting.id === socket.id) {
+      // if the waiting socket disconnected then delete it.
+      // the weakmap will ensure everything else is cleared.
+      waiting = null;
     }
   });
 
   socket.on("message", message => {
-    console.log("message=", message);
     console.log("a user messaged", socket.id, message.type || "NA");
-    //TODO - don't use rooms - sio might be distributed
-    socket.to(MY_ROOM).emit("message", message);
+    const peer = peers.get(socket);
+    if (peer) {
+      peer.emit("message", message);
+    } else {
+      console.warn("No peer for socketId=", socket.id);
+    }
   });
 });
 
