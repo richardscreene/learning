@@ -8,7 +8,6 @@ import * as ws from "../services/ws";
 import * as connection from "./connection";
 
 let localStream;
-let remoteStream;
 let pc;
 let socketId;
 let participant;
@@ -99,17 +98,7 @@ function receive(message) {
 
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-      pc.ontrack = event => {
-        console.log("GOT REMOTE STREAM", event);
-        if (event.streams[0]) {
-          //TODO - do we need to store remoteStream
-          remoteStream = event.streams[0];
-          console.log("Send chatConnectSucceeded 2");
-          store.dispatch(actions.chatConnectSucceeded(participant, remoteStream));
-
-          //put(actions.chatConnectSucceeded(participant, remoteStream));
-        }
-      };
+      pc.ontrack = gotTrack;
 
       pc.setRemoteDescription(message)
         .then(() => {
@@ -147,6 +136,17 @@ function receive(message) {
   }
 }
 
+function gotTrack(event) {
+  console.log("GOT REMOTE STREAM", event);
+  if (event.streams[0]) {
+    //remoteStream = event.streams[0];
+    console.log("Send chatConnectSucceeded 1");
+    store.dispatch(actions.chatConnectSucceeded(participant, event.streams[0]));
+    //TODO - once we've got remote stream we can disconnect the websocket
+    //ws.disconnect();
+  }
+}
+
 function start() {
   //TODO is pc truthy - then ignore
   pc = new RTCPeerConnection(pcOptions);
@@ -154,18 +154,7 @@ function start() {
 
   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-  //TODO - don't repeat this function
-  pc.ontrack = event => {
-    console.log("GOT REMOTE STREAM", event);
-    if (event.streams[0]) {
-      //TODO - do we need to store remoteStream
-      remoteStream = event.streams[0];
-      console.log("Send chatConnectSucceeded 1");
-      store.dispatch(actions.chatConnectSucceeded(participant, remoteStream));
-
-      //put(actions.chatConnectSucceeded(participant, remoteStream));
-    }
-  };
+  pc.ontrack = gotTrack;
 
   return pc
     .createOffer(offerOptions)
@@ -204,8 +193,10 @@ function* connect(action) {
 
 function* disconnect(action) {
   try {
-    pc.close();
-    yield sendWithRefresh(ws.disconnect);
+    if (pc) {
+      pc.close();
+    }
+    ws.disconnect();
     yield put(actions.chatDisconnectSucceeded());
   } catch (err) {
     yield generateError(err);

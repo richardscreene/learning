@@ -34,7 +34,7 @@ function* login(action) {
     localStorage.setItem("refreshToken", credentials.refreshToken);
     connection.set(credentials.accessToken);
     yield put(actions.accountLoginUpdated(connection.account()));
-    history.push("/");
+    history.push("/chat");
   } catch (err) {
     yield put(generateError(err));
   }

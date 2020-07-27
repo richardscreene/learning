@@ -9,14 +9,13 @@ let sio;
 export function connect(accessToken, cb) {
   console.debug("connect");
 
-console.log("token=", accessToken);
+  console.log("token=", accessToken);
   if (sio) {
     // already connected
     return Promise.resolve();
   } else {
     console.log("connecting...");
     return new Promise((resolve, reject) => {
-
       sio = socketio(BASE_URL, {
         transportOptions: {
           polling: {
@@ -41,7 +40,7 @@ console.log("token=", accessToken);
         resolve(sio.id);
       });
 
-      sio.on("error", (err) => {
+      sio.on("error", err => {
         console.warn("Error on websocket - err=", err);
         //sio.close();
         //sio = null;
@@ -62,8 +61,10 @@ export function send(accessToken, message) {
   }
 }
 
-export function disconnect(accessToken) {
-  sio.close();
+export function disconnect() {
+  if (sio) {
+    sio.close();
+  }
   sio = null;
   return Promise.resolve();
 }
