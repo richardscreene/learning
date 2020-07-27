@@ -98,8 +98,6 @@ export default class Chat extends React.Component {
           )}
         </Button>
 
-        <div>{this.props.participant && this.props.participant.email}</div>
-
         <div
           style={{
             position: "relative",
@@ -108,6 +106,20 @@ export default class Chat extends React.Component {
             minHeight: "auto"
           }}
         >
+          {this.props.participant && this.props.participant.name && (
+            <div
+              style={{
+                position: "absolute",
+                top: "5%",
+                left: "5%",
+                display: "inline-block",
+                zIndex: 1
+              }}
+            >
+              <p>{this.props.participant.name}</p>
+            </div>
+          )}
+
           <div
             style={{
               display: "inline-block",
