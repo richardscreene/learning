@@ -4,7 +4,7 @@
   "description": "",
   "xmain": "index.js",
   "scripts": {
-    "dev": "webpack-dev-server --open —-mode=development --hot --env.USER_API_URL=http://localhost:3000",
+    "dev": "webpack-dev-server --open —-mode=development --hot --env.USER_API_URL=http://localhost:3000 --env.CHAT_API_URL=http://localhost:3001",
     "build": "webpack --mode=production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -5,15 +5,10 @@ export default class Chat extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      localSource: null,
-      remoteSource: null,
       isConnecting: false
     };
-    this.input = React.createRef();
     this.localVideo = React.createRef();
     this.remoteVideo = React.createRef();
-    //TODO - can I use localVideo.srcObject???
-    this.localSteam = null;
   }
 
   componentDidMount() {
@@ -51,11 +46,8 @@ export default class Chat extends React.Component {
     console.log("strem", stream);
     this.localStream = stream;
     this.localVideo.current.srcObject = stream;
-    /*    this.setState({
-      remoteSource: stream
-    });
-    */
   }
+
   errorCallback(error) {
     console.error("navigator.getUserMedia error: ", error);
   }
@@ -71,10 +63,6 @@ export default class Chat extends React.Component {
     e.preventDefault();
   }
 
-  //TODO - on success
-  //this.remoteVideo.current.srcObject = event.streams[0];
-
-  //TODO - hide button while call is being established
   render() {
     console.log("props=", this.props);
     return (

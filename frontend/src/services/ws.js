@@ -1,9 +1,8 @@
 import socketio from "socket.io-client";
 import { raiseError, messageUpdate } from "../actions";
 
-//TODO _ handle expired tokens
-
-const BASE_URL = "http://127.0.0.1:3001"; //TODO process.env.USER_API_URL;
+console.log("env=", process.env);
+const BASE_URL = process.env.CHAT_API_URL;
 let sio;
 
 export function connect(accessToken, cb) {

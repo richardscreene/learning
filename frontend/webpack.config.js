@@ -27,7 +27,8 @@ module.exports = (env) => {
       new HWP({ template: path.join(__dirname, "/src/index.html") }),
       new webpack.DefinePlugin({
         "process.env": {
-          USER_API_URL: JSON.stringify(env.USER_API_URL)
+          USER_API_URL: JSON.stringify(env.USER_API_URL),
+          CHAT_API_URL: JSON.stringify(env.CHAT_API_URL)
         }
       })
     ],
