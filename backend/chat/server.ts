@@ -30,23 +30,8 @@ let connected = null;
 io.use((socket, next) => {
   return Promise.resolve()
     .then(() => {
-      const bearerToken = socket.handshake.headers["authorization"];
-      console.log("bearerToken=", bearerToken);
-      if (!bearerToken) {
-        return Promise.reject(
-          Boom.unauthorized("Badly formed authorization header")
-        );
-      } else {
-        //TODO - can we share the regex in authenticate
-        let parts = bearerToken.match(AUTH_REGEX);
-        if (!parts) {
-          return Promise.reject(
-            Boom.unauthorized("Badly formed authorization header")
-          );
-        } else {
-          return Promise.resolve(parts[1]);
-        }
-      }
+      const authHeader = socket.handshake.headers["authorization"];
+      return authenticate.parseAuthorization(authHeader);
     })
     .then(token => {
       return authenticate.verify(token);
@@ -63,7 +48,7 @@ io.use((socket, next) => {
     });
 });
 
-const MY_ROOM="my-room";
+const MY_ROOM = "my-room";
 io.on("connection", socket => {
   console.log("a user connected", socket.id);
   socket.join(MY_ROOM);

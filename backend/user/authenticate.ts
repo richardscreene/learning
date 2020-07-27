@@ -31,8 +31,7 @@ export function verify(token: string): Promise<User> {
 	});
 }
 
-function getToken(req: Request): Promise<string> {
-	let authHeader = req.headers["authorization"];
+export function parseAuthorization(authHeader: string) : Promise<string> {
 	if (!authHeader) {
 		return Promise.reject(Boom.unauthorized("No authorization header"));
 	}
@@ -45,6 +44,11 @@ function getToken(req: Request): Promise<string> {
 	} else {
 		return Promise.resolve(parts[1]);
 	}
+}
+
+function getToken(req: Request): Promise<string> {
+	let authHeader = req.headers["authorization"];
+	return parseAuthorization(authHeader);
 }
 
 export function isAccessValid(req: Request, res: Response, next: NextFunction) {
