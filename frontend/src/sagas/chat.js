@@ -30,31 +30,49 @@ function pcClose() {
     pc.close();
     pc = null;
   }
-  // destroy the websoket if it still exists
+  // destroy the websocket if it still exists
   ws.disconnect();
+  participant = null;
 }
 
 function receive(message) {
   console.log("message=", message);
-  //console.log("connecton=", connection.account());
 
   switch (message.type) {
     case "caller":
       console.log("We're the caller");
       participant = message.user;
-      //TODO - move start here, or move offer code to func....
-      start().catch(err => {
-        console.warn("Failed to call - err=", err);
-      });
+
+      pc = new RTCPeerConnection(pcOptions);
+      pc.addEventListener("icecandidate", onIceCandidate);
+
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+      pc.ontrack = onAddTrack;
+
+      return pc
+        .createOffer(offerOptions)
+        .then(desc => {
+          console.log("offer=", desc);
+          return pc.setLocalDescription(desc).then(() => {
+            return Promise.resolve(desc);
+          });
+        })
+        .then(desc => {
+          console.log("Set local descroption");
+          ws.send(desc);
+        })
+        .catch(err => {
+          console.log("caller err=", err);
+        });
       break;
     case "callee":
       participant = message.user;
       console.log("We're the callee - wait for offer");
       break;
     case "offer":
-      //TODO - check state properly
       if (pc) {
-        console.warn("Already in progress");
+        console.warn("Already connected");
         return;
       }
       pc = new RTCPeerConnection(pcOptions);
@@ -78,6 +96,9 @@ function receive(message) {
         .then(desc => {
           console.log("C");
           ws.send(desc);
+        })
+        .catch(err => {
+          console.log("offer err=", err);
         });
       break;
     case "answer":
@@ -114,31 +135,6 @@ function receive(message) {
         console.warn("Unknown message");
       }
   }
-}
-
-function start() {
-  pc = new RTCPeerConnection(pcOptions);
-  pc.addEventListener("icecandidate", onIceCandidate);
-
-  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
-  pc.ontrack = onAddTrack;
-
-  return pc
-    .createOffer(offerOptions)
-    .then(desc => {
-      console.log("offer=", desc);
-      return pc.setLocalDescription(desc).then(() => {
-        return Promise.resolve(desc);
-      });
-    })
-    .then(desc => {
-      console.log("Set local descroption");
-      ws.send(desc);
-    })
-    .catch(err => {
-      console.log("err=", err);
-    });
 }
 
 function onIceCandidate(event) {
