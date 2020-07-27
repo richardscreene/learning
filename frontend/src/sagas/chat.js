@@ -51,7 +51,8 @@ function receive(message) {
       participant = message.user;
 
       pc = new RTCPeerConnection(pcOptions);
-      pc.addEventListener("icecandidate", onIceCandidate);
+      pc.onicecandidate = onIceCandidate;
+      pc.oniceconnectionstatechange = onIceConnectionState;
 
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
@@ -85,7 +86,8 @@ function receive(message) {
         return;
       }
       pc = new RTCPeerConnection(pcOptions);
-      pc.addEventListener("icecandidate", onIceCandidate);
+      pc.onicecandidate = onIceCandidate;
+      pc.oniceconnectionstatechange = onIceConnectionState;
 
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
@@ -139,6 +141,14 @@ function receive(message) {
   }
 }
 
+function onIceConnectionState(event) {
+  console.log("onIceConnectionState event=", event);
+  if (pc.iceConnectionState === "disconnected") {
+    pcClose();
+    store.dispatch(actions.chatDisconnectSucceeded());
+  }
+}
+
 function onIceCandidate(event) {
   console.log("event=", event);
   if (event && event.candidate) {
@@ -171,7 +181,6 @@ function* connect(action) {
       // if we've already connected then terminate the current session
       // and start a new one
       pcClose();
-      ws.disconnect();
       yield put(actions.chatDisconnectSucceeded());
     }
 

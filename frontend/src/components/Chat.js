@@ -36,7 +36,7 @@ export default class Chat extends React.Component {
       console.log("remote stream has changed");
       this.remoteVideo.current.srcObject = this.props.remoteStream;
       this.setState({
-        isConnecting: !this.props.remoteStream
+        isConnecting: false
       });
     }
   }
