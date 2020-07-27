@@ -36,7 +36,7 @@ export function connect(accessToken, cb) {
           console.log("disconnected");
           sio = null;
         });
-        resolve(sio.id);
+        resolve();
       });
 
       sio.on("error", err => {

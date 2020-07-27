@@ -8,8 +8,9 @@ import * as common from "./common";
 
 let localStream;
 let pc;
-let socketId; //TODO - is this needed???
 let participant;
+
+//TODO - on ws error then disconnect
 
 const offerOptions = {
   offerToReceiveAudio: true,
@@ -38,21 +39,17 @@ function receive(message) {
   //console.log("connecton=", connection.account());
 
   switch (message.type) {
-    case "connected":
+    case "caller":
+      console.log("We're the caller");
+      participant = message.user;
       //TODO - move start here, or move offer code to func....
-      //TODO - bodge - otherwise socketId is not set before the connected message is received
-      setTimeout(() => {
-        participant = message.user;
-        console.log("id=", message.id, socketId);
-        // lowest value of id initialises the peerconnection
-        if (message.id < socketId) {
-          start().catch(err => {
-            console.warn("Failed to call - err=", err);
-          });
-        } else {
-          console.log("We're waiting for connection from peer");
-        }
-      }, 500);
+      start().catch(err => {
+        console.warn("Failed to call - err=", err);
+      });
+      break;
+    case "callee":
+      participant = message.user;
+      console.log("We're the callee - wait for offer");
       break;
     case "offer":
       //TODO - check state properly
@@ -85,6 +82,11 @@ function receive(message) {
       break;
     case "answer":
       console.log("GOT AN ANSWER");
+      if (!pc) {
+        console.warn("No offer sent");
+        return;
+      }
+
       pc.setRemoteDescription(message)
         .then(() => {
           console.log("Set remote descriptioN");
@@ -95,6 +97,11 @@ function receive(message) {
       break;
     default:
       if (typeof message.candidate === "string") {
+        if (!pc) {
+          console.warn("No offer/answer sent");
+          return;
+        }
+
         if (!message.candidate) {
           console.log("End of candidates");
           //TODO - we don't need the websoket anymore
@@ -162,8 +169,7 @@ function* connect(action) {
 
     localStream = action.localStream;
 
-    socketId = yield common.sendWithRefresh(ws.connect, receive);
-    console.log("socketId=", socketId);
+    yield common.sendWithRefresh(ws.connect, receive);
   } catch (err) {
     console.log("err=", err);
     yield common.generateError(err);
