@@ -1,57 +1,15 @@
 import { store } from "../store";
-import { call, put, takeLatest } from "redux-saga/effects";
+import { put, takeLatest } from "redux-saga/effects";
 import "regenerator-runtime/runtime";
 import history from "../history";
 import * as actions from "../actions";
-import * as http from "../services/http";
 import * as ws from "../services/ws";
-import * as connection from "./connection";
+import * as common from "./common";
 
 let localStream;
 let pc;
-let socketId;
+let socketId; //TODO - is this needed???
 let participant;
-
-//TODO - this is shared with users.js
-function* generateError(err) {
-  let action;
-  if (err.response) {
-    if (err.response && err.response.status === 401) {
-      console.warn("Refresh timer expired");
-      localStorage.removeItem("refreshToken");
-      yield put(actions.accountLogoutSucceeded());
-      history.push("/login");
-    } else {
-      action = actions.errorRaised(err.response.status, err.response.data);
-    }
-  } else {
-    action = actions.errorRaised(500, err.message, err.stack);
-  }
-  if (action) {
-    yield put(action);
-  }
-}
-
-function* refresh() {
-  const refreshToken = localStorage.getItem("refreshToken");
-  const credentials = yield call(http.refresh, refreshToken);
-  connection.set(credentials.accessToken);
-  yield put(actions.accountLoginUpdated(connection.account()));
-}
-
-function* sendWithRefresh(wsFunc, ...args) {
-  try {
-    return yield call(wsFunc, connection.get(), ...args);
-  } catch (err) {
-    if (err.response && err.response.status === 401) {
-      console.log("access token expired");
-      yield refresh();
-      return yield call(wsFunc, connection.get(), ...args);
-    } else {
-      throw err;
-    }
-  }
-}
 
 const offerOptions = {
   offerToReceiveAudio: true,
@@ -66,12 +24,22 @@ const pcOptions = {
   ]
 };
 
+function pcClose() {
+  if (pc) {
+    pc.close();
+    pc = null;
+  }
+  // destroy the websoket if it still exists
+  ws.disconnect();
+}
+
 function receive(message) {
   console.log("message=", message);
   //console.log("connecton=", connection.account());
 
   switch (message.type) {
     case "connected":
+      //TODO - move start here, or move offer code to func....
       //TODO - bodge - otherwise socketId is not set before the connected message is received
       setTimeout(() => {
         participant = message.user;
@@ -87,7 +55,6 @@ function receive(message) {
       }, 500);
       break;
     case "offer":
-      put({ type: "CHAT_CONNECT_SUCCEEDED", aa: 123, bb: 456 });
       //TODO - check state properly
       if (pc) {
         console.warn("Already in progress");
@@ -98,7 +65,7 @@ function receive(message) {
 
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-      pc.ontrack = gotTrack;
+      pc.ontrack = onAddTrack;
 
       pc.setRemoteDescription(message)
         .then(() => {
@@ -113,7 +80,7 @@ function receive(message) {
         })
         .then(desc => {
           console.log("C");
-          ws.send(connection.get(), desc);
+          ws.send(desc);
         });
       break;
     case "answer":
@@ -130,8 +97,8 @@ function receive(message) {
       if (typeof message.candidate === "string") {
         if (!message.candidate) {
           console.log("End of candidates");
-          // we don't need the websoket anymore
-          ws.disconnect();
+          //TODO - we don't need the websoket anymore
+          //ws.disconnect();
         } else {
           console.log("Candidate", message);
           pc.addIceCandidate(message);
@@ -142,25 +109,13 @@ function receive(message) {
   }
 }
 
-function gotTrack(event) {
-  console.log("GOT REMOTE STREAM", event);
-  if (event.streams[0]) {
-    //remoteStream = event.streams[0];
-    console.log("Send chatConnectSucceeded");
-    store.dispatch(actions.chatConnectSucceeded(participant, event.streams[0]));
-    //TODO - once we've got remote stream we can disconnect the websocket
-    //    ws.disconnect();
-  }
-}
-
 function start() {
-  //TODO is pc truthy - then ignore
   pc = new RTCPeerConnection(pcOptions);
   pc.addEventListener("icecandidate", onIceCandidate);
 
   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-  pc.ontrack = gotTrack;
+  pc.ontrack = onAddTrack;
 
   return pc
     .createOffer(offerOptions)
@@ -172,7 +127,7 @@ function start() {
     })
     .then(desc => {
       console.log("Set local descroption");
-      ws.send(connection.get(), desc);
+      ws.send(desc);
     })
     .catch(err => {
       console.log("err=", err);
@@ -182,30 +137,45 @@ function start() {
 function onIceCandidate(event) {
   console.log("event=", event);
   if (event && event.candidate) {
-    ws.send(connection.get(), event.candidate);
+    ws.send(event.candidate);
+  }
+}
+
+function onAddTrack(event) {
+  console.log("GOT REMOTE STREAM", event);
+  if (event.streams[0]) {
+    console.log("Send chatConnectSucceeded");
+    store.dispatch(actions.chatConnectSucceeded(participant, event.streams[0]));
   }
 }
 
 function* connect(action) {
   console.log("connect saga");
-  localStream = action.localStream;
   try {
-    socketId = yield sendWithRefresh(ws.connect, receive);
+    if (pc) {
+      // if we've already connected then terminate the current session
+      // and start a new one
+      pcClose();
+      ws.disconnect();
+      yield put(actions.chatDisconnectSucceeded());
+    }
+
+    localStream = action.localStream;
+
+    socketId = yield common.sendWithRefresh(ws.connect, receive);
     console.log("socketId=", socketId);
   } catch (err) {
-    yield generateError(err);
+    console.log("err=", err);
+    yield common.generateError(err);
   }
 }
 
 function* disconnect(action) {
   try {
-    if (pc) {
-      pc.close();
-    }
-    ws.disconnect();
+    pcClose();
     yield put(actions.chatDisconnectSucceeded());
   } catch (err) {
-    yield generateError(err);
+    yield common.generateError(err);
   }
 }
 

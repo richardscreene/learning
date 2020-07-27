@@ -51,7 +51,7 @@ export function connect(accessToken, cb) {
 
 //TODO - should we re-connect on token timeout???
 //TODO - should we connect when we send first message?  then we don't need to pass WsConnect around
-export function send(accessToken, message) {
+export function send(message) {
   console.log("Send message=", message);
   if (!sio) {
     return Promise.resolve(); //TODO - should be error
