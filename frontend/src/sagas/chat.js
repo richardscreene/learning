@@ -9,8 +9,13 @@ import * as common from "./common";
 let localStream;
 let pc;
 let participant;
+let mode;
 
-//TODO - on ws error then disconnect
+const MODE = {
+  NONE: "NONE",
+  CALLER: "CALLER",
+  CALLEE: "CALLEE"
+};
 
 const offerOptions = {
   offerToReceiveAudio: true,
@@ -33,6 +38,7 @@ function pcClose() {
   // destroy the websocket if it still exists
   ws.disconnect();
   participant = null;
+  mode = MODES.NONE;
 }
 
 function receive(message) {
@@ -41,6 +47,7 @@ function receive(message) {
   switch (message.type) {
     case "caller":
       console.log("We're the caller");
+      mode = MODE.CALLER;
       participant = message.user;
 
       pc = new RTCPeerConnection(pcOptions);
@@ -68,6 +75,8 @@ function receive(message) {
       break;
     case "callee":
       participant = message.user;
+      mode = MODE.CALLEE;
+
       console.log("We're the callee - wait for offer");
       break;
     case "offer":
@@ -122,15 +131,8 @@ function receive(message) {
           console.warn("No offer/answer sent");
           return;
         }
-
-        if (!message.candidate) {
-          console.log("End of candidates");
-          //TODO - we don't need the websoket anymore
-          //ws.disconnect();
-        } else {
-          console.log("Candidate", message);
-          pc.addIceCandidate(message);
-        }
+        console.log("Candidate", message);
+        pc.addIceCandidate(message);
       } else {
         console.warn("Unknown message");
       }
@@ -140,7 +142,13 @@ function receive(message) {
 function onIceCandidate(event) {
   console.log("event=", event);
   if (event && event.candidate) {
-    ws.send(event.candidate);
+    ws.send(event.candidate).catch(err => {
+      console.warn("Cannot send ICE candidate - err=", err);
+    });
+    if (mode === MODE.CALLEE) {
+      console.log("disconnect the websocket");
+      ws.disconnect();
+    }
   }
 }
 
@@ -148,6 +156,10 @@ function onAddTrack(event) {
   console.log("GOT REMOTE STREAM", event);
   if (event.streams[0]) {
     console.log("Send chatConnectSucceeded");
+    if (mode === MODE.CALLER) {
+      console.log("disconnect the websocket");
+      ws.disconnect();
+    }
     store.dispatch(actions.chatConnectSucceeded(participant, event.streams[0]));
   }
 }
@@ -167,7 +179,7 @@ function* connect(action) {
 
     yield common.sendWithRefresh(ws.connect, receive);
   } catch (err) {
-    console.log("err=", err);
+    console.warn("err=", err);
     yield common.generateError(err);
   }
 }

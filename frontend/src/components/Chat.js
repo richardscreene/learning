@@ -14,8 +14,7 @@ export default class Chat extends React.Component {
   componentDidMount() {
     console.log("Mounting the chat page");
 
-    //TODO- include audio
-    const constraints = { audio: false, video: true };
+    const constraints = { audio: true, video: true };
 
     navigator.mediaDevices
       .getUserMedia(constraints)

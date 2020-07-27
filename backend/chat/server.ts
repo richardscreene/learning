@@ -92,6 +92,7 @@ io.on("connection", socket => {
   });
 
   socket.on("message", message => {
+    console.log("message=", message);
     console.log("a user messaged", socket.id, message.type || "NA");
     //TODO - don't use rooms - sio might be distributed
     socket.to(MY_ROOM).emit("message", message);

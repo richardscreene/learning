@@ -1,7 +1,6 @@
 import socketio from "socket.io-client";
 import { raiseError, messageUpdate } from "../actions";
 
-console.log("env=", process.env);
 const BASE_URL = process.env.CHAT_API_URL;
 let sio;
 
@@ -48,12 +47,10 @@ export function connect(accessToken, cb) {
   }
 }
 
-//TODO - should we re-connect on token timeout???
-//TODO - should we connect when we send first message?  then we don't need to pass WsConnect around
 export function send(message) {
   console.log("Send message=", message);
   if (!sio) {
-    return Promise.resolve(); //TODO - should be error
+    return Promise.reject(new Error("Websocket not connected"));
   } else {
     sio.emit("message", message);
     return Promise.resolve();
