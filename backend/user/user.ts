@@ -1,4 +1,5 @@
-import { randomBytes, pbkdf2 } from "crypto";
+import { hash, compare } from "bcrypt";
+
 import { promisify } from "util";
 
 import * as Boom from "@hapi/boom";
@@ -9,38 +10,25 @@ import { send } from "./email-mailgun";
 import * as logger from "./logger";
 import { verify, sign } from "./authenticate";
 
-const ITERATIONS: number = 1000;
 const SALT_LENGTH: number = 16;
 
 function generateHash(password: string): Promise<Auth> {
-	let salt: string = randomBytes(SALT_LENGTH).toString("hex");
-	return promisify(pbkdf2)(password, salt, ITERATIONS, 64, "sha512").then(
-		(derivedKey: Buffer) => {
-			let auth: Auth = {
-				hash: derivedKey.toString("hex"),
-				salt,
-				iterations: ITERATIONS
-			};
-			return Promise.resolve(auth);
-		}
-	);
+	return hash(password, SALT_LENGTH).then(hash => {
+		let auth: Auth = {
+			hash
+		};
+		return Promise.resolve(auth);
+	});
 }
 
-//TODO - should be constant time comparison
-function validateHash(
-	password: string,
-	hash: string,
-	salt: string
-): Promise<void> {
-	return promisify(pbkdf2)(password, salt, ITERATIONS, 64, "sha512").then(
-		(derivedKey: Buffer) => {
-			if (derivedKey.toString("hex") === hash) {
-				return Promise.resolve();
-			} else {
-				return Promise.reject(Boom.unauthorized("Could not authenticate"));
-			}
+function validateHash(password: string, hash: string): Promise<void> {
+	return compare(password, hash).then(result => {
+		if (result) {
+			return Promise.resolve();
+		} else {
+			return Promise.reject(Boom.unauthorized("Could not authenticate"));
 		}
-	);
+	});
 }
 
 function removeAuth(user: User): User {
@@ -79,7 +67,7 @@ export function login(obj: {
 		.findByEmail(obj.email)
 		.then((myUser: User) => {
 			user = myUser;
-			return validateHash(obj.password, user.auth.hash, user.auth.salt);
+			return validateHash(obj.password, user.auth.hash);
 		})
 		.then(() => {
 			return createCredentials(user);

@@ -43,8 +43,7 @@ io.use((socket, next) => {
     })
     .catch(err => {
       console.log("err=", err);
-      //next(err);
-      next();
+      next(err);
     });
 });
 
@@ -56,8 +55,6 @@ io.on("connection", socket => {
   //TODO - maybe use WeakMap to ensure no memory leak
   if (connected) {
     console.log("Connecting", socket.id, connected.id);
-    // TODO generate a unique ID across multiple instances, cannot use userId
-    // since the same user might appear multiple times (esp. during testing)
     socket.emit("message", {
       type: "caller",
       user: sockets.get(connected)
@@ -73,7 +70,9 @@ io.on("connection", socket => {
 
   socket.on("disconnect", socket => {
     console.log("a user disconnected");
-    connected = null;
+    if (connected.id === socket.id) {
+      connected = null;
+    }
   });
 
   socket.on("message", message => {

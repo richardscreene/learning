@@ -38,7 +38,7 @@ function pcClose() {
   // destroy the websocket if it still exists
   ws.disconnect();
   participant = null;
-  mode = MODES.NONE;
+  mode = MODE.NONE;
 }
 
 function receive(message) {

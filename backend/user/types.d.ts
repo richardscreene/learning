@@ -1,7 +1,5 @@
 export interface Auth {
 	hash: string;
-	salt: string;
-	iterations: number;
 }
 
 export const enum Role {

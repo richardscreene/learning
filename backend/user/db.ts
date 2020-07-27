@@ -24,10 +24,7 @@ const ADMIN_USER: User = {
 	role: Role.Admin,
 	auth: {
 		// password is "12345678"
-		hash:
-			"138b23fc2ced938469a581d88cdcd39fc052bb3b07e33395a63d7492d9e6a9fad3fdfafa490b6ad78fbb87e023399fcd9e045394efb82e19b14e90ae622969cf",
-		salt: "5864059381178b787c82b716cfd2036f",
-		iterations: 1000
+		hash: "$2b$16$EVj0jzmitnxbuuolxwhlmOKpgoorn2aQhLj4ySScPQMKXdavY6jf2"
 	}
 };
 
