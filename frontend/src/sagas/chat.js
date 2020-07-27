@@ -128,8 +128,14 @@ function receive(message) {
       break;
     default:
       if (typeof message.candidate === "string") {
-        console.log("Candidate", message);
-        pc.addIceCandidate(message);
+        if (!message.candidate) {
+          console.log("End of candidates");
+          // we don't need the websoket anymore
+          ws.disconnect();
+        } else {
+          console.log("Candidate", message);
+          pc.addIceCandidate(message);
+        }
       } else {
         console.warn("Unknown message");
       }
@@ -140,10 +146,10 @@ function gotTrack(event) {
   console.log("GOT REMOTE STREAM", event);
   if (event.streams[0]) {
     //remoteStream = event.streams[0];
-    console.log("Send chatConnectSucceeded 1");
+    console.log("Send chatConnectSucceeded");
     store.dispatch(actions.chatConnectSucceeded(participant, event.streams[0]));
     //TODO - once we've got remote stream we can disconnect the websocket
-    //ws.disconnect();
+    //    ws.disconnect();
   }
 }
 
