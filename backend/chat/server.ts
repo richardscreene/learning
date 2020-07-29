@@ -16,9 +16,13 @@ import * as authenticate from "../user/authenticate";
 // NB. the websocket is only connected while the peers exchange signalling
 // information.  This should make it easy to deploy as a lambda function.
 
-const http = require("http");
-const server = http.createServer(app);
-const io = require("socket.io")(server, {
+const PORT: number = 3001;
+
+const server = app.listen(PORT, () => {
+  console.log("Listening on port=", PORT);
+});
+
+const io = require("socket.io").listen(server, {
   handlePreflightRequest: (req, res) => {
     const headers = {
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -46,12 +50,7 @@ io.use((socket, next) => {
     })
     .then((user: User) => {
       users.set(socket, user);
-      console.log("user=", user);
       next();
-    })
-    .catch(err => {
-      console.log("err=", err);
-      next(err);
     });
 });
 
@@ -97,10 +96,4 @@ io.on("connection", socket => {
       console.warn("No peer for socketId=", socket.id);
     }
   });
-});
-
-const PORT: number = 3001;
-
-server.listen(PORT, () => {
-  console.log("Listening on port=", PORT);
 });
