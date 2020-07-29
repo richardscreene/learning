@@ -10,10 +10,10 @@ import { send } from "./email-mailgun";
 import * as logger from "./logger";
 import { verify, sign } from "./authenticate";
 
-const SALT_LENGTH: number = 16;
+const SALT_ROUNDS: number = 10;
 
 function generateHash(password: string): Promise<Auth> {
-	return hash(password, SALT_LENGTH).then(hash => {
+	return hash(password, SALT_ROUNDS).then(hash => {
 		let auth: Auth = {
 			hash
 		};

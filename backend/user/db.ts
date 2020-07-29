@@ -24,7 +24,7 @@ const ADMIN_USER: User = {
 	role: Role.Admin,
 	auth: {
 		// password is "12345678"
-		hash: "$2b$16$EVj0jzmitnxbuuolxwhlmOKpgoorn2aQhLj4ySScPQMKXdavY6jf2"
+		hash: "$2b$10$jqS1iWmEmxXwjaLr1qCWL.J96cZUFy7CxrwgIcpW6WKwLzpg2jpei"
 	}
 };
 
