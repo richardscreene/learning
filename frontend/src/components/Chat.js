@@ -88,9 +88,7 @@ export default class Chat extends React.Component {
         <div
           style={{
             position: "relative",
-            display: "inline-block",
-            minWidth: "500px",
-            minHeight: "auto"
+            display: "inline-block"
           }}
         >
           {this.props.participant && this.props.participant.name && (
@@ -113,19 +111,26 @@ export default class Chat extends React.Component {
               zIndex: 2
             }}
           >
-            <video autoPlay={true} ref={this.remoteVideo}></video>
+            <video
+              style={{
+                width: "480px",
+                height: "auto"
+              }}
+              autoPlay={true}
+              ref={this.remoteVideo}
+            ></video>
           </div>
           <div
             style={{
               position: "absolute",
-              top: "80%",
-              left: "80%",
+              top: "75%",
+              left: "75%",
               display: "inline-block",
               zIndex: 1
             }}
           >
             <video
-              width="100px"
+              width="90px"
               height="auto"
               autoPlay={true}
               ref={this.localVideo}

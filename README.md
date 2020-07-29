@@ -28,9 +28,13 @@ appear in the log showing the link that would be sent.
 To use a mongodb instance set MONGO_URL environment variable to point to the instance.
 If the URL is not defined then it will use the internal memory store.
 
-Then run the server:
+Then run the servers:
 ```
 cd backend/user
+npm install
+npm run dev
+
+cd backend/chat
 npm install
 npm run dev
 ```
@@ -50,3 +54,4 @@ For admin rights use the default user bob@example.com (password 12345678).
 # TODO
 
 Lots more testing - particularly frontend.
+Make GUI more appealing.
