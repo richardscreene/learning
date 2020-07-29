@@ -35,8 +35,6 @@ let users = new WeakMap();
 let peers = new WeakMap();
 let waiting = null;
 
-//TODO - seems to fallback to long-polling (is it auth related?)
-
 io.use((socket, next) => {
   return Promise.resolve()
     .then(() => {
