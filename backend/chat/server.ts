@@ -35,6 +35,8 @@ let users = new WeakMap();
 let peers = new WeakMap();
 let waiting = null;
 
+//TODO - seems to fallback to long-polling (is it auth related?)
+
 io.use((socket, next) => {
   return Promise.resolve()
     .then(() => {
@@ -73,6 +75,7 @@ io.on("connection", socket => {
     });
     peers.set(socket, waiting);
     peers.set(waiting, socket);
+    waiting = null;
   } else {
     console.log("Wait for another user");
     waiting = socket;
@@ -80,7 +83,7 @@ io.on("connection", socket => {
 
   socket.on("disconnect", socket => {
     console.log("a user disconnected");
-    if (waiting.id === socket.id) {
+    if (waiting && waiting.id === socket.id) {
       // if the waiting socket disconnected then delete it.
       // the weakmap will ensure everything else is cleared.
       waiting = null;
