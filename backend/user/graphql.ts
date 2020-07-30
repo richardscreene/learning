@@ -24,10 +24,12 @@ const schema: GraphQLSchema = buildSchema(`
 const rootValue: object = {
 	//curl -X POST -H "Content-Type: application/json" -d '{"query": "{ list(skip: 5,limit:1) { email } }"}' http://localhost:3000/graphql
 	list: ({ skip, limit }: { skip: number; limit: number }) => {
+    //TODO - admin only
 		return user.list(skip, limit);
 	},
 	get: ({ userId }: { userId: string }) => {
     console.log("userId=", userId);
+    //TODO -  admin or own user only
 		return user.retrieve(userId);
 	}
 };

@@ -241,7 +241,7 @@ app.use(
 	graphqlHTTP({
 		schema,
 		rootValue,
-		graphiql: true
+		graphiql: true	//TODO only if dev
 	})
 );
 
