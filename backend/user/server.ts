@@ -9,11 +9,12 @@ import * as Boom from "@hapi/boom";
 import { OpenApiValidator } from "express-openapi-validator";
 import * as cors from "cors";
 import { User, Credentials } from "./types";
-
+import { graphqlHTTP } from "express-graphql";
 import * as logger from "./logger";
 import * as user from "./user";
 import * as db from "./db";
 import * as authenticate from "./authenticate";
+import { schema, rootValue } from "./graphql";
 
 const SPEC_FILE: string = join(__dirname, "api.json");
 
@@ -231,6 +232,17 @@ app.get(
 			})
 			.catch(next);
 	}
+);
+
+//TODO - authentication
+//TODO - db ready
+app.use(
+	"/graphql",
+	graphqlHTTP({
+		schema,
+		rootValue,
+		graphiql: true
+	})
 );
 
 // eslint-disable-next-line no-unused-vars
