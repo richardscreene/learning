@@ -16,6 +16,13 @@ const schema: GraphQLSchema = buildSchema(`
   }
 
   input CreateUser {
+    password: String!
+    email: String!
+    name: String!
+    role: Role!
+  }
+
+  input UpdateUser {
     password: String
     email: String
     name: String
@@ -29,9 +36,9 @@ const schema: GraphQLSchema = buildSchema(`
 
   type Mutation {
     create(createUser: CreateUser): User
+    update(userId: ID!, updateUser: UpdateUser): User
     delete(userId: ID!): Boolean
   }
-
 `);
 
 const rootValue: object = {
@@ -49,6 +56,11 @@ const rootValue: object = {
 		console.log("userId=", userId);
 		//TODO -  admin or own user only
 		return user.retrieve(userId);
+	},
+  update: ({ userId, updateUser }: { userId: string, updateUser: any }) => {
+		console.log("user=", updateUser, typeof updateUser);
+		//TODO -  admin or own user only
+		return user.update(userId, updateUser);
 	},
 	delete: ({ userId }: { userId: string }) => {
 		//TODO - is admin
