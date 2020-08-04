@@ -65,6 +65,7 @@ class Collection {
 	}
 
 	insertOne(doc: object): Promise<object> {
+		//LATER - allows insertion of duplicate emails
 		let id = ObjectID();
 		this.docs[id] = { ...doc, _id: id };
 		return Promise.resolve({ insertedCount: 1, ops: [{ ...this.docs[id] }] });

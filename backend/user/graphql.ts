@@ -15,22 +15,44 @@ const schema: GraphQLSchema = buildSchema(`
   	role: Role!
   }
 
+  input CreateUser {
+    password: String
+    email: String
+    name: String
+    role: Role
+  }
+
   type Query {
-    get(userId: ID!): User
+    retrieve(userId: ID!): User
     list(skip: Int, limit: Int): [User!]
   }
+
+  type Mutation {
+    create(createUser: CreateUser): User
+    delete(userId: ID!): Boolean
+  }
+
 `);
 
 const rootValue: object = {
 	//curl -X POST -H "Content-Type: application/json" -d '{"query": "{ list(skip: 5,limit:1) { email } }"}' http://localhost:3000/graphql
 	list: ({ skip, limit }: { skip: number; limit: number }) => {
-    //TODO - admin only
+		//TODO - admin only
 		return user.list(skip, limit);
 	},
-	get: ({ userId }: { userId: string }) => {
-    console.log("userId=", userId);
-    //TODO -  admin or own user only
+	create: ({ createUser }: { createUser: any }) => {
+		console.log("user=", createUser, typeof createUser);
+		//TODO -  admin
+		return user.create(createUser);
+	},
+	retrieve: ({ userId }: { userId: string }) => {
+		console.log("userId=", userId);
+		//TODO -  admin or own user only
 		return user.retrieve(userId);
+	},
+	delete: ({ userId }: { userId: string }) => {
+		//TODO - is admin
+		return user.del(userId);
 	}
 };
 
