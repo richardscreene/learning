@@ -186,6 +186,7 @@ export function update(accessToken, user) {
 }
 
 export function del(accessToken, userId) {
+  //TODO - doesn't work - what should it return?????
   console.debug("API del", userId);
 
   const url = combineUrls(USERS_URL, userId);

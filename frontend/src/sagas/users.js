@@ -20,7 +20,6 @@ function* list(action) {
 function* create(action) {
   try {
     const user = yield common.sendWithRefresh(rest.create, action.user);
-    console.log("user=", user);
     yield put(actions.userResponseSucceeded(user));
     history.goBack();
   } catch (err) {
