@@ -1,10 +1,11 @@
 import { call, put } from "redux-saga/effects";
 import * as actions from "../actions";
 import * as connection from "./connection";
-import * as http from "../services/http";
+import * as rest from "../services/rest";
 
 export function* generateError(err) {
   let action;
+  console.log("err=", err);
   if (err.response) {
     if (err.response && err.response.status === 401) {
       console.warn("Refresh timer expired");
@@ -12,7 +13,7 @@ export function* generateError(err) {
       yield put(actions.accountLogoutSucceeded());
       history.push("/login");
     } else {
-      action = actions.errorRaised(err.response.status, err.response.data);
+      action = actions.errorRaised(err.response.status, err.response.data.errors[0].message);
     }
   } else {
     action = actions.errorRaised(500, err.message, err.stack);
@@ -24,7 +25,7 @@ export function* generateError(err) {
 
 export function* refresh() {
   const refreshToken = localStorage.getItem("refreshToken");
-  const credentials = yield call(http.refresh, refreshToken);
+  const credentials = yield call(rest.refresh, refreshToken);
   connection.set(credentials.accessToken);
   yield put(actions.accountLoginUpdated(connection.account()));
 }

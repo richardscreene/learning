@@ -4,6 +4,7 @@ import { raiseError, loginUpdate, logoutSucceeded } from "../actions";
 
 const BASE_URL = process.env.USER_API_URL;
 const USERS_URL = combineUrls(BASE_URL, "/users");
+const GRAPHQL_URL = combineUrls(BASE_URL, "/graphql");
 
 const URL = {
   LOGIN: combineUrls(BASE_URL, "login"),
@@ -88,15 +89,22 @@ export function logout(refreshToken) {
 export function list(accessToken, skip, limit) {
   console.debug("API list", skip, limit);
   return axios({
-    method: "GET",
-    url: USERS_URL,
+    method: "POST",
+    url: GRAPHQL_URL,
     headers: { Authorization: `Bearer ${accessToken}` },
-    params: {
-      skip,
-      limit
+    data: {
+      query:
+        "query($skip: Int, $limit: Int) { list(skip: $skip, limit: $limit) { userId, email, name, role } }",
+      variables: {
+        skip,
+        limit
+      }
     }
   }).then(res => {
-    return Promise.resolve(res.data);
+    console.log("xx=", res.data);
+    return Promise.resolve(
+      Object.keys(res.data.data.list).map(k => res.data.data.list[k])
+    );
   });
 }
 
