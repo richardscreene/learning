@@ -55,3 +55,4 @@ For admin rights use the default user bob@example.com (password 12345678).
 
 Lots more testing - particularly frontend.
 Make GUI more appealing.
+Deploy chat server to AWS and vertically scale.
