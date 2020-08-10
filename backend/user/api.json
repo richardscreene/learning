@@ -10,24 +10,6 @@
 		}
 	],
 	"paths": {
-		"/graphql": {
-			"post": {
-				"summary": "graphql POST  TODO - fill the rest in",
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			},
-			"get": {
-				"summary": "graphql GET  TODO - fill the rest in",
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				}
-			}
-		},
 		"/login": {
 			"put": {
 				"summary": "Login",

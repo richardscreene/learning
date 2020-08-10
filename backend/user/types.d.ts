@@ -12,6 +12,7 @@ export interface User {
 	email?: string;
 	name?: string;
 	role?: Role;
+	//TODO - move tokens to auth
 	refreshToken?: string;
 	resetToken?: string;
 	auth?: Auth;
@@ -20,4 +21,9 @@ export interface User {
 export interface Credentials {
 	refreshToken?: string;
 	accessToken: string;
+}
+
+export interface JWT {
+	token: string;
+	user: User;
 }

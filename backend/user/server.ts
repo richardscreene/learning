@@ -8,7 +8,7 @@ import * as bodyParser from "body-parser";
 import * as Boom from "@hapi/boom";
 import { OpenApiValidator } from "express-openapi-validator";
 import * as cors from "cors";
-import { User, Credentials } from "./types";
+import { User, Credentials, JWT } from "./types";
 import { graphqlHTTP } from "express-graphql";
 import * as logger from "./logger";
 import * as user from "./user";
@@ -22,12 +22,6 @@ app.use(bodyParser.json());
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || true }));
 
-new OpenApiValidator({
-	apiSpec: SPEC_FILE,
-	validateRequests: true,
-	validateResponses: true
-}).installSync(app);
-
 function isDbReady(req: Request, res: Response, next: NextFunction) {
 	if (db.ready()) {
 		next();
@@ -36,23 +30,45 @@ function isDbReady(req: Request, res: Response, next: NextFunction) {
 	}
 }
 
-app.put(
-	"/login",
-	isDbReady,
-	(req: Request, res: Response, next: NextFunction) => {
-		user
-			.login(req.body)
-			.then((credentials: Credentials) => {
-				res.json(credentials);
-			})
-			.catch(next);
-	}
+app.use(isDbReady);
+
+interface IRequestWithLocals extends express.Request {
+	locals: object;
+}
+
+//TODO - authentication
+app.use(
+	"/graphql",
+	graphqlHTTP((req: Request) => {
+		return authenticate.parseToken(req).then((jwt:JWT) => {
+			return Promise.resolve({
+				schema,
+				rootValue,
+				graphiql: process.env.NODE_ENV === "development",
+				context: jwt
+			});
+		});
+	})
 );
+
+new OpenApiValidator({
+	apiSpec: SPEC_FILE,
+	validateRequests: true,
+	validateResponses: true
+}).installSync(app);
+
+app.put("/login", (req: Request, res: Response, next: NextFunction) => {
+	user
+		.login(req.body)
+		.then((credentials: Credentials) => {
+			res.json(credentials);
+		})
+		.catch(next);
+});
 
 app.put(
 	"/refresh",
 	authenticate.isRefreshValid,
-	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
 			.refresh(res.locals.user.userId, res.locals.token)
@@ -63,35 +79,26 @@ app.put(
 	}
 );
 
-app.post(
-	"/register",
-	isDbReady,
-	(req: Request, res: Response, next: NextFunction) => {
-		user
-			.register(req.body)
-			.then((credentials: Credentials) => {
-				res.json(credentials);
-			})
-			.catch(next);
-	}
-);
+app.post("/register", (req: Request, res: Response, next: NextFunction) => {
+	user
+		.register(req.body)
+		.then((credentials: Credentials) => {
+			res.json(credentials);
+		})
+		.catch(next);
+});
 
-app.put(
-	"/forgot",
-	isDbReady,
-	(req: Request, res: Response, next: NextFunction) => {
-		user
-			.forgot(req.body.email)
-			.then(() => {
-				res.send();
-			})
-			.catch(next);
-	}
-);
+app.put("/forgot", (req: Request, res: Response, next: NextFunction) => {
+	user
+		.forgot(req.body.email)
+		.then(() => {
+			res.send();
+		})
+		.catch(next);
+});
 
 app.put(
 	"/reset/:resetToken",
-	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
 			.reset(req.params.resetToken, req.body.password)
@@ -105,7 +112,6 @@ app.put(
 app.post(
 	"/logout",
 	authenticate.isRefreshValid,
-	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		return user
 			.logout(res.locals.user.userId, res.locals.token)
@@ -119,7 +125,6 @@ app.post(
 app.put(
 	"/password",
 	authenticate.isRefreshValid,
-	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		return user
 			.password(res.locals.user.userId, req.body.password)
@@ -133,7 +138,6 @@ app.put(
 app.post(
 	"/users",
 	authenticate.isAdmin,
-	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
 			.create(req.body)
@@ -147,7 +151,6 @@ app.post(
 app.get(
 	"/users/:userId",
 	authenticate.isAccessValid,
-	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		if (res.locals.user.role === "admin") {
 			next();
@@ -170,7 +173,6 @@ app.get(
 app.put(
 	"/users/:userId",
 	authenticate.isAccessValid,
-	isDbReady,
 	(req: Request, res: Response, next: NextFunction) => {
 		if (res.locals.user.role === "admin") {
 			next();
@@ -194,7 +196,6 @@ app.put(
 
 app.delete(
 	"/users/:userId",
-	isDbReady,
 	authenticate.isAdmin,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
@@ -208,7 +209,6 @@ app.delete(
 
 app.patch(
 	"/users/:userId",
-	isDbReady,
 	authenticate.isAdmin,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
@@ -222,7 +222,6 @@ app.patch(
 
 app.get(
 	"/users",
-	isDbReady,
 	authenticate.isAdmin,
 	(req: Request, res: Response, next: NextFunction) => {
 		user
@@ -232,17 +231,6 @@ app.get(
 			})
 			.catch(next);
 	}
-);
-
-//TODO - authentication
-//TODO - db ready
-app.use(
-	"/graphql",
-	graphqlHTTP({
-		schema,
-		rootValue,
-		graphiql: true	//TODO only if dev
-	})
 );
 
 // eslint-disable-next-line no-unused-vars

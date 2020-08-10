@@ -3,7 +3,7 @@ import * as Boom from "@hapi/boom";
 import * as jwt from "jsonwebtoken";
 import * as logger from "./logger";
 import { Request, Response, NextFunction } from "express";
-import { User, Role } from "./types";
+import { User, Role, JWT } from "./types";
 
 const JWT_SECRET: string = process.env.JWT_SECRET || "DUMMY_SECRET";
 const AUTH_REGEX: RegExp = /^Bearer\s+(.+)/;
@@ -31,7 +31,7 @@ export function verify(token: string): Promise<User> {
 	});
 }
 
-export function parseAuthorization(authHeader: string) : Promise<string> {
+export function parseAuthorization(authHeader: string): Promise<string> {
 	if (!authHeader) {
 		return Promise.reject(Boom.unauthorized("No authorization header"));
 	}
@@ -51,16 +51,26 @@ function getToken(req: Request): Promise<string> {
 	return parseAuthorization(authHeader);
 }
 
-export function isAccessValid(req: Request, res: Response, next: NextFunction) {
-	getToken(req)
+export function parseToken(req: Request): Promise<JWT> {
+	let result: JWT = <JWT>{};
+	return getToken(req)
 		.then(token => {
-			res.locals.token = token;
+			result.token = token;
 			return verify(token);
 		})
 		.then((user: User) => {
+			result.user = user;
+			return Promise.resolve(result);
+		});
+}
+
+export function isAccessValid(req: Request, res: Response, next: NextFunction) {
+	parseToken(req)
+		.then((result: JWT) => {
+			res.locals.token = result.token;
 			// if the token contains an email field then we know its an access token
-			if (user.email) {
-				res.locals.user = user;
+			if (result.user && result.user.email) {
+				res.locals.user = result.user;
 				next();
 			} else {
 				next(Boom.unauthorized("Bad token supplied"));
@@ -74,27 +84,21 @@ export function isRefreshValid(
 	res: Response,
 	next: NextFunction
 ) {
-	getToken(req)
-		.then(token => {
-			res.locals.token = token;
-			return verify(token);
-		})
-		.then((user: User) => {
-			res.locals.user = user;
+	return parseToken(req)
+		.then((result: JWT) => {
+			res.locals = { ...res.locals, result };
 			next();
 		})
 		.catch(next);
 }
 
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
-	getToken(req)
-		.then(token => {
-			res.locals.token = token;
-			return verify(token);
-		})
-		.then((user: User) => {
-			if (user.role === Role.Admin) {
-				res.locals.user = user;
+	parseToken(req)
+		.then((result: JWT) => {
+			res.locals.token = result.token;
+			// if the token contains an email field then we know its an access token
+			if (result.user && result.user.role === Role.Admin) {
+				res.locals.user = result.user;
 				next();
 			} else {
 				next(Boom.forbidden("Not admin user"));

@@ -1,6 +1,7 @@
 import { buildSchema, GraphQLSchema } from "graphql";
-//import { GraphQLSchema } from "graphql.d.ts";
+import * as Boom from "@hapi/boom";
 import * as user from "./user";
+import { User, Role, JWT } from "./types";
 
 const schema: GraphQLSchema = buildSchema(`
   enum Role {
@@ -51,33 +52,67 @@ const schema: GraphQLSchema = buildSchema(`
 
 const rootValue: object = {
 	//curl -X POST -H "Content-Type: application/json" -d '{"query": "{ list(skip: 5,limit:1) { email } }"}' http://localhost:3000/graphql
-	list: ({ skip, limit }: { skip: number; limit: number }) => {
-		//TODO - admin only
-		return user.list(skip, limit);
+	list: ({ skip, limit }: { skip: number; limit: number }, context: JWT) => {
+		if (context.user && context.user.role === Role.Admin) {
+			return user.list(skip, limit);
+		} else {
+			return Promise.reject(Boom.forbidden("Not admin user"));
+		}
 	},
-	create: ({ createUser }: { createUser: any }) => {
-		console.log("user=", createUser, typeof createUser);
-		//TODO -  admin
-		return user.create(createUser);
+	create: ({ createUser }: { createUser: any }, context: JWT) => {
+		if (context.user && context.user.role === Role.Admin) {
+			return user.create(createUser);
+		} else {
+			return Promise.reject(Boom.forbidden("Not admin user"));
+		}
 	},
-	retrieve: ({ userId }: { userId: string }) => {
+	retrieve: ({ userId }: { userId: string }, context: JWT) => {
 		console.log("userId=", userId);
-		//TODO -  admin or own user only
-		return user.retrieve(userId);
+		if (
+			(context.user && context.user.role === Role.Admin) ||
+			context.user.userId === userId
+		) {
+			return user.retrieve(userId);
+		} else {
+			return Promise.reject(Boom.forbidden("Users can only get themselves"));
+		}
 	},
-  update: ({ userId, updateUser }: { userId: string, updateUser: any }) => {
+	update: (
+		{ userId, updateUser }: { userId: string; updateUser: any },
+		context: JWT
+	) => {
 		console.log("update user=", updateUser, typeof updateUser);
-		//TODO -  admin or own user only
-		return user.update(userId, updateUser);
+		let err;
+		if (context.user && context.user.role === Role.Admin) {
+			// carry on
+		} else if (context.user && context.user.userId !== userId) {
+			err = Boom.forbidden("Users can only change themselves");
+		} else if (context.user && updateUser.role !== context.user.role) {
+			err = Boom.forbidden("Users cannot modify role");
+		}
+		if (err) {
+			return Promise.reject(err);
+		} else {
+			return user.update(userId, updateUser);
+		}
 	},
-  patch: ({ userId, patchUser }: { userId: string, patchUser: any }) => {
+	patch: (
+		{ userId, patchUser }: { userId: string; patchUser: any },
+		context: JWT
+	) => {
 		console.log("patchUser user=", patchUser, typeof patchUser);
-		//TODO -  admin or own user only
-		return user.patch(userId, patchUser);
+		if (context.user && context.user.role === Role.Admin) {
+			return user.patch(userId, patchUser);
+		} else {
+			return Promise.reject(Boom.forbidden("Not admin user"));
+		}
 	},
-	delete: ({ userId }: { userId: string }) => {
-		//TODO - is admin
-		return user.del(userId);
+	delete: ({ userId }: { userId: string }, context: JWT) => {
+		if (context.user && context.user.role === Role.Admin) {
+			return user.del(userId);
+		} else {
+			return Promise.reject(Boom.forbidden("Not admin user"));
+		}
 	}
 };
 

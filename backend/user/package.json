@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon -e js,ts,json -x 'ts-node' local.ts",
+    "dev": "NODE_ENV=development nodemon -e js,ts,json -x 'ts-node' local.ts",
     "build": "tsc -p ."
   },
   "repository": {
