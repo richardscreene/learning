@@ -2,15 +2,13 @@ import { put, takeLatest } from "redux-saga/effects";
 import "regenerator-runtime/runtime";
 import history from "../history";
 import * as actions from "../actions";
-//import * as rest from "../services/rest";
-  import * as rest from "../services/graphql";    //TODO - fix me....
-
+import * as graphql from "../services/graphql";
 import * as connection from "./connection";
 import * as common from "./common";
 
 function* list(action) {
   try {
-    const users = yield common.sendWithRefresh(rest.list, action.skip, action.limit);
+    const users = yield common.sendWithRefresh(graphql.list, action.skip, action.limit);
     yield put(actions.userListSucceeded(users));
   } catch (err) {
     yield common.generateError(err);
@@ -19,7 +17,7 @@ function* list(action) {
 
 function* create(action) {
   try {
-    const user = yield common.sendWithRefresh(rest.create, action.user);
+    const user = yield common.sendWithRefresh(graphql.create, action.user);
     yield put(actions.userResponseSucceeded(user));
     history.goBack();
   } catch (err) {
@@ -29,7 +27,7 @@ function* create(action) {
 
 function* retrieve(action) {
   try {
-    const user = yield common.sendWithRefresh(rest.retrieve, action.userId);
+    const user = yield common.sendWithRefresh(graphql.retrieve, action.userId);
     yield put(actions.userResponseSucceeded(user));
   } catch (err) {
     yield common.generateError(err);
@@ -38,7 +36,7 @@ function* retrieve(action) {
 
 function* patch(action) {
   try {
-    const user = yield common.sendWithRefresh(rest.patch, action.userId, action.mod);
+    const user = yield common.sendWithRefresh(graphql.patch, action.userId, action.mod);
     yield put(actions.userResponseSucceeded(user));
     const account = connection.account();
     if (account && user.userId === account.userId) {
@@ -51,7 +49,7 @@ function* patch(action) {
 
 function* update(action) {
   try {
-    const user = yield common.sendWithRefresh(rest.update, action.user);
+    const user = yield common.sendWithRefresh(graphql.update, action.user);
     yield put(actions.userResponseSucceeded(user));
     const account = connection.account();
     if (account && user.userId === account.userId) {
@@ -65,7 +63,7 @@ function* update(action) {
 
 function* del(action) {
   try {
-    yield common.sendWithRefresh(rest.del, action.userId);
+    yield common.sendWithRefresh(graphql.del, action.userId);
     yield put(actions.userDeleteSucceeded(action.userId));
   } catch (err) {
     yield common.generateError(err);

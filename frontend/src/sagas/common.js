@@ -5,7 +5,6 @@ import * as rest from "../services/rest";
 
 export function* generateError(err) {
   let action;
-  console.log("err=", err);
   if (err.response) {
     if (err.response && err.response.status === 401) {
       console.warn("Refresh timer expired");

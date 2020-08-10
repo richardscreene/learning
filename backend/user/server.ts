@@ -32,15 +32,10 @@ function isDbReady(req: Request, res: Response, next: NextFunction) {
 
 app.use(isDbReady);
 
-interface IRequestWithLocals extends express.Request {
-	locals: object;
-}
-
-//TODO - authentication
 app.use(
 	"/graphql",
 	graphqlHTTP((req: Request) => {
-		return authenticate.parseToken(req).then((jwt:JWT) => {
+		return authenticate.parseToken(req).then((jwt: JWT) => {
 			return Promise.resolve({
 				schema,
 				rootValue,
@@ -134,6 +129,10 @@ app.put(
 			.catch(next);
 	}
 );
+
+
+// NB. THE USER REST ROUTES ARE DEPRECATED - USE GRAPHQL
+
 
 app.post(
 	"/users",

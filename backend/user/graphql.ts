@@ -46,12 +46,11 @@ const schema: GraphQLSchema = buildSchema(`
     create(createUser: CreateUser): User
     update(userId: ID!, updateUser: UpdateUser): User
     patch(userId: ID!, patchUser: PatchUser): User
-    delete(userId: ID!): Boolean
+    delete(userId: ID!): ID
   }
 `);
 
 const rootValue: object = {
-	//curl -X POST -H "Content-Type: application/json" -d '{"query": "{ list(skip: 5,limit:1) { email } }"}' http://localhost:3000/graphql
 	list: ({ skip, limit }: { skip: number; limit: number }, context: JWT) => {
 		if (context.user && context.user.role === Role.Admin) {
 			return user.list(skip, limit);
@@ -109,7 +108,9 @@ const rootValue: object = {
 	},
 	delete: ({ userId }: { userId: string }, context: JWT) => {
 		if (context.user && context.user.role === Role.Admin) {
-			return user.del(userId);
+			return user.del(userId).then(() => {
+        return Promise.resolve(userId);
+      });
 		} else {
 			return Promise.reject(Boom.forbidden("Not admin user"));
 		}
