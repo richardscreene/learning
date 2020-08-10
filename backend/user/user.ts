@@ -5,20 +5,15 @@ import { promisify } from "util";
 import * as Boom from "@hapi/boom";
 import * as jwt from "jsonwebtoken";
 import * as db from "./db";
-import { User, Auth, Credentials, Role } from "./types";
+import { User, Credentials, Role } from "./types";
 import { send } from "./email-mailgun";
 import * as logger from "./logger";
 import { verify, sign } from "./authenticate";
 
 const SALT_ROUNDS: number = 10;
 
-function generateHash(password: string): Promise<Auth> {
-	return hash(password, SALT_ROUNDS).then(hash => {
-		let auth: Auth = {
-			hash
-		};
-		return Promise.resolve(auth);
-	});
+function generateHash(password: string): Promise<string> {
+	return hash(password, SALT_ROUNDS);
 }
 
 function validateHash(password: string, hash: string): Promise<void> {
@@ -33,7 +28,7 @@ function validateHash(password: string, hash: string): Promise<void> {
 
 function removeAuth(user: User): User {
 	// we don't want to expose the auth to the client
-	delete user.auth;
+	delete user.hash;
 	delete user.refreshToken;
 	delete user.resetToken;
 
@@ -67,7 +62,7 @@ export function login(obj: {
 		.findByEmail(obj.email)
 		.then((myUser: User) => {
 			user = myUser;
-			return validateHash(obj.password, user.auth.hash);
+			return validateHash(obj.password, user.hash);
 		})
 		.then(() => {
 			return createCredentials(user);
@@ -114,12 +109,12 @@ export function register(obj: {
 	let user: User;
 	let credentials: Credentials;
 	return generateHash(obj.password)
-		.then((auth: Auth) => {
+		.then((hash: string) => {
 			return db.insertOne({
 				email: obj.email,
 				name: obj.name,
 				role: obj.role,
-				auth
+				hash
 			});
 		})
 		.then((myUser: User) => {
@@ -165,7 +160,6 @@ export function reset(
 ): Promise<Credentials> {
 	logger.debug("reset", { resetToken });
 	let user: User;
-	let auth: Auth;
 	let credentials: Credentials;
 
 	return verify(resetToken)
@@ -180,15 +174,15 @@ export function reset(
 				return generateHash(password);
 			}
 		})
-		.then(myAuth => {
-			auth = myAuth;
+		.then(hash => {
+			user.hash = hash;
 			return createCredentials(user);
 		})
 		.then(myCredentials => {
 			credentials = myCredentials;
 			return db.updateById(
 				user.userId,
-				{ auth, refreshToken: credentials.refreshToken },
+				{ hash: user.hash, refreshToken: credentials.refreshToken },
 				{ resetToken: "" }
 			);
 		})
@@ -220,7 +214,6 @@ export function password(
 ): Promise<Credentials> {
 	logger.debug("logout", { userId });
 	let user: User;
-	let auth: Auth;
 	let credentials: Credentials;
 
 	return db
@@ -229,14 +222,14 @@ export function password(
 			user = myUser;
 			return generateHash(password);
 		})
-		.then(myAuth => {
-			auth = myAuth;
+		.then(hash => {
+			user.hash = hash;
 			return createCredentials(user);
 		})
 		.then(myCredentials => {
 			credentials = myCredentials;
 			return db.updateById(user.userId, {
-				auth,
+				hash: user.hash,
 				refreshToken: credentials.refreshToken
 			});
 		})
@@ -254,12 +247,12 @@ export function create(obj: {
 	logger.debug("create", { obj });
 
 	return generateHash(obj.password)
-		.then((auth: Auth) => {
+		.then((hash: string) => {
 			let user: User = {
 				email: obj.email,
 				name: obj.name,
 				role: obj.role,
-				auth
+				hash
 			};
 			return db.insertOne(user);
 		})
@@ -296,8 +289,8 @@ export function update(
 	// we don't always update the password
 	if (obj.password) {
 		return generateHash(obj.password)
-			.then((auth: Auth) => {
-				user.auth = auth;
+			.then((hash: string) => {
+				user.hash = hash;
 				return db.updateById(userId, user);
 			})
 			.then((myUser: User) => {

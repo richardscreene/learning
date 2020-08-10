@@ -1,7 +1,3 @@
-export interface Auth {
-	hash: string;
-}
-
 export const enum Role {
 	Admin = "admin",
 	User = "user"
@@ -12,10 +8,9 @@ export interface User {
 	email?: string;
 	name?: string;
 	role?: Role;
-	//TODO - move tokens to auth
 	refreshToken?: string;
 	resetToken?: string;
-	auth?: Auth;
+	hash?: string;
 }
 
 export interface Credentials {

@@ -2,7 +2,7 @@ import * as logger from "./logger";
 import { MongoClient, ObjectID } from "mongodb";
 import { MemClient } from "./memdb";
 
-import { User, Auth, Role } from "./types";
+import { User, Role } from "./types";
 import * as Boom from "@hapi/boom";
 
 const DB_NAME: string = "redux-learning";
@@ -22,10 +22,8 @@ const ADMIN_USER: User = {
 	email: "bob@example.com",
 	name: "Bob Example",
 	role: Role.Admin,
-	auth: {
-		// password is "12345678"
-		hash: "$2b$10$jqS1iWmEmxXwjaLr1qCWL.J96cZUFy7CxrwgIcpW6WKwLzpg2jpei"
-	}
+	// password is "12345678"
+	hash: "$2b$10$jqS1iWmEmxXwjaLr1qCWL.J96cZUFy7CxrwgIcpW6WKwLzpg2jpei"
 };
 
 DbClient.connect(MONGO_URL, {
